@@ -26,7 +26,7 @@ void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp)//, int32 _res
 	planetSeed = GetOwner()->GetActorLocation();
 	mesh->SetRelativeLocation(FVector::ZeroVector);
 	rootChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(), 1.f,
-		0, localUp, axisA, axisB, surfaceSettings);
+		0, localUp, axisA, axisB, surfaceSettings, "0");
 }
 
 // Called when the game starts
@@ -109,16 +109,9 @@ void UTerrain::BuildMesh(int resolution)
 
 void UTerrain::ConstructQuadTree()
 {
-	
-
+	UE_LOG(LogTemp, Log, TEXT("TIME START: %fs"), GetWorld()->TimeSeconds);
 	FVector camLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
-	//UE_LOG(LogTemp, Log, TEXT("Cam: %f,%f,%f"), camLocation.X, camLocation.Y, camLocation.Z);
-	//Chunk* parentChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(),1.f,
-	//	0, localUp, axisA, axisB, surfaceSettings);
-	bool update = rootChunk->GenerateChildren(camLocation);
-	UE_LOG(LogTemp, Log, TEXT("Update %i"), static_cast<int>(update));
-	UE_LOG(LogTemp, Log, TEXT("%fs"), GetWorld()->TimeSeconds);
-	if (update)
+	if (rootChunk->GenerateChildren(camLocation))
 	{
 		ResetData();
 		int i = 0;
@@ -145,6 +138,7 @@ void UTerrain::ConstructQuadTree()
 		mesh->CreateMeshSection(i, vertices, triangles, normals, uvs, vertexColors, tangents, true);
 		mesh->SetRelativeLocation(FVector::ZeroVector, false, nullptr, ETeleportType::TeleportPhysics);
 	}
+	UE_LOG(LogTemp, Log, TEXT("TIME END: %fs"), GetWorld()->TimeSeconds);
 }
 
 void UTerrain::DetermineVisibility(FVector planetPos, FVector camPos)
@@ -231,7 +225,7 @@ FVector UTerrain::CalculateNormal(FVector vertexPos)
 
 //Chunk Class
 Chunk::Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel,
-	FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings)
+	FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, FString id)
 {
 	children.SetNum(0);
 	this->parent = parent;
@@ -243,48 +237,48 @@ Chunk::Chunk(Chunk* parent, FVector location, FVector planetLocation, float scal
 	this->axisA = axisA;
 	this->axisB = axisB;
 	this->surfaceSettings = surfaceSettings;
+	this->id = id;
 }
 
 bool Chunk::GenerateChildren(FVector cameraLocation)
 {
 	bool modified = false;
 
-	if (detailLevel <= maxLOD)// && detailLevel >= 0)
+	if (detailLevel <= maxLOD)
 	{
-		UE_LOG(LogTemp, Log, TEXT("LOD: %i"), detailLevel);
-		UE_LOG(LogTemp, Log, TEXT("Cam Location: %f,%f,%f"), cameraLocation.Z, cameraLocation.Y, cameraLocation.Z);
+		//UE_LOG(LogTemp, Log, TEXT("ID: %s"), *id);
+		//UE_LOG(LogTemp, Log, TEXT("LOD: %i"), detailLevel);
 		FVector surfaceLocation = (location * surfaceSettings->radius) + planetLocation;
-		UE_LOG(LogTemp, Log, TEXT("Location: %f,%f,%f"), surfaceLocation.X, surfaceLocation.Y, surfaceLocation.Z);
+		//UE_LOG(LogTemp, Log, TEXT("Location: %f,%f,%f"), surfaceLocation.X, surfaceLocation.Y, surfaceLocation.Z);
 		float distance = FVector::Distance(surfaceLocation, cameraLocation);
-		UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
+		//UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
 		if (distance <= detailDistances[detailLevel] * surfaceSettings->radius)
 		{
-			UE_LOG(LogTemp, Log, TEXT("CHILDREN %i"), children.Num());
 			if (children.Num() < 4)
 			{
-				UE_LOG(LogTemp, Log, TEXT("GENERATING NEW CHILDREN"));
+				//UE_LOG(LogTemp, Log, TEXT("GENERATING NEW CHILDREN"));
 				children.SetNum(4);
 				TArray<Chunk*> newChunks;
 				children[0] = new Chunk(this,
 					location + axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id +"0");
 
 				children[1] = new Chunk(this,
 					location + axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "1");
 
 				children[2] = new Chunk(this,
 					location - axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "2");
 
 				children[3] = new Chunk(this,
 					location - axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "3");
 
 				modified = true;
 			}
 
-			UE_LOG(LogTemp, Log, TEXT("UPDATING CHILDREN"));
+			//UE_LOG(LogTemp, Log, TEXT("UPDATING CHILDREN"));
 			for (auto& child : children)
 			{
 				if (child->GenerateChildren(cameraLocation))
@@ -293,11 +287,11 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 		}
 		else if (children.Num() >= 4)
 		{
-			UE_LOG(LogTemp, Log, TEXT("REMOVING OLD CHILDREN"));
+			//UE_LOG(LogTemp, Log, TEXT("REMOVING OLD CHILDREN"));
 			children.Empty();
 			modified = true;
 		}
-		UE_LOG(LogTemp, Log, TEXT("END OF BRANCH"));
+		//UE_LOG(LogTemp, Log, TEXT("END OF BRANCH"));
 	}
 	return modified;
 }
@@ -323,7 +317,7 @@ TArray<Chunk*> Chunk::GetVisibleChildren()
 
 FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 {
-	const int resolution = 8;
+	//const int resolution = 8;
 	FTriangleData data;
 	int tri = 0;
 	FProcMeshTangent tangent = FProcMeshTangent(0.f, 1.f, 0.f);

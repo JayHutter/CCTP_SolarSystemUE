@@ -36,7 +36,7 @@ public:
 	USurfaceSettings* surfaceSettings;
 
 	Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel,
-		FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings);
+		FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, FString id="0");
 
 	bool GenerateChildren(FVector cameraLocation);
 	TArray<Chunk*> GetVisibleChildren();
@@ -45,13 +45,15 @@ public:
 	TMap<int, float> detailDistances =
 	{
 		{0, 1000.f},
-		{1, 8.f},
-		{2, 4.f},
-		{3, 2.f},
-		{4, 1.f},
-		{5, 0.5f}
+		{1, 1.1f},
+		{2, 1.f},
+		{3, .9f},
+		{4, .8f},
+		{5, .7f}
 	};
 	const int maxLOD = 5;
+	FString id;
+	int resolution = 16;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

@@ -31,7 +31,7 @@ public:
 
 	UStaticMeshComponent* simpleMesh;
 
-	UPROPERTY(VisibleAnywhere, Instanced)
+	//UPROPERTY(VisibleAnywhere, Instanced)
 	TArray<UTerrain*> terrain;
 
 	UPROPERTY(VisibleAnywhere, Instanced)
@@ -46,12 +46,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	float gravityOffset = 50;
 
-	UPROPERTY(EditAnywhere)
-	bool updateInRealTime = false;
-
 	void ManageLOD();
-
-	UPROPERTY(VisibleAnywhere)
 	int detailLevel = -1;
 
 	void Init(float radius, TArray<FNoiseSettings> noiseSettings);
@@ -64,7 +59,6 @@ protected:
 
 	void GenerateWater();
 
-	UPROPERTY(VisibleAnywhere)
 	bool active = false;
 	int currentRes = 16;
 	APlayerCameraManager* playerCamera;

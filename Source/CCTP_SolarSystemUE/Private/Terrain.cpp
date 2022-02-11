@@ -24,7 +24,7 @@ void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp)//, int32 _res
 
 	faceLocation = localUp * surfaceSettings->radius;
 	planetSeed = GetOwner()->GetActorLocation();
-	mesh->SetRelativeLocation(FVector::ZeroVector);
+	mesh->SetWorldLocation(GetOwner()->GetActorLocation());
 	rootChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(), 1.f,
 		0, localUp, axisA, axisB, surfaceSettings, "0");
 }
@@ -42,7 +42,7 @@ void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp)//, int32 _res
 
 void UTerrain::BuildMesh(int resolution)
 {
-	mesh->SetRelativeLocation(FVector::ZeroVector);
+	//mesh->SetRelativeLocation(FVector::ZeroVector);
 	ResetData();
 
 	if (currentActive == active && resolution == currentResolution)
@@ -136,7 +136,7 @@ void UTerrain::ConstructQuadTree()
 
 		mesh->ClearAllMeshSections();
 		mesh->CreateMeshSection(i, vertices, triangles, normals, uvs, vertexColors, tangents, true);
-		mesh->SetRelativeLocation(FVector::ZeroVector, false, nullptr, ETeleportType::TeleportPhysics);
+		ResetData(); //Empty arrays to save mem
 	}
 	UE_LOG(LogTemp, Log, TEXT("TIME END: %fs"), GetWorld()->TimeSeconds);
 }
@@ -335,7 +335,7 @@ FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 
 
 			float elevation = 0;
-			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere, surfaceSettings);
+			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius + planetLocation, surfaceSettings);
 			FVector vertex = pointOnUnitSphere * surfaceSettings->radius * (1 + elevation);
 
 			data.vertices.Add(vertex);

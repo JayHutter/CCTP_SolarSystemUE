@@ -64,7 +64,7 @@ class CCTP_SOLARSYSTEMUE_API UTerrain : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UTerrain();
-	void Init(USurfaceSettings* _settings, FVector _localUp = FVector(0.f, 0.f, 1.f));//, int32 _resolution = 5);
+	void Init(USurfaceSettings* _settings, FVector _localUp = FVector(0.f, 0.f, 1.f));
 
 protected:
 	// Called when the game starts

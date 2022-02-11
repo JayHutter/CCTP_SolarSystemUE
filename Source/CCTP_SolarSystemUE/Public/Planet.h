@@ -31,7 +31,7 @@ public:
 
 	UStaticMeshComponent* simpleMesh;
 
-	//UPROPERTY(VisibleAnywhere, Instanced)
+	UPROPERTY(VisibleAnywhere, Instanced)
 	TArray<UTerrain*> terrain;
 
 	UPROPERTY(VisibleAnywhere, Instanced)

@@ -8,8 +8,8 @@ ASolarSystem::ASolarSystem()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
-
+	root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = root;
 }
 
 // Called when the game starts or when spawned
@@ -31,7 +31,8 @@ void ASolarSystem::PlacePlanets()
 
 		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(planetTemplate, location, rotator, spawnParams);
 		planets.Add(newPlanet);
-
+		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		//newPlanet->Init(miniumRadius, noiseSettings);
 		location += FVector(maxRadius * 10, FMath::RandRange(-maxRadius*20, maxRadius*20), FMath::RandRange(-maxRadius*10, maxRadius*10));
 	}
 }

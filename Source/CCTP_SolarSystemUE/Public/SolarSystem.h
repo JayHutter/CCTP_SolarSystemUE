@@ -37,6 +37,8 @@ protected:
 	virtual void BeginPlay() override;
 	void PlacePlanets();
 	void BuildPlanets();
+
+	USceneComponent* root;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -15,7 +15,6 @@ APlanet::APlanet()
 	surfaceSettings = CreateDefaultSubobject<USurfaceSettings>(TEXT("Surface Settings"));
 	gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
 	simpleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Simple Surface"));
-	simpleMesh->SetRelativeLocation(FVector::ZeroVector);
 
 	//static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	//simpleMesh->SetStaticMesh(SphereMeshAsset.Object);

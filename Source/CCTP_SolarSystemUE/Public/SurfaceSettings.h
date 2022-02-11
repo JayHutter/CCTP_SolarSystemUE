@@ -22,4 +22,6 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TArray<FNoiseSettings> noiseSettings;
+
+	FVector seed;
 };

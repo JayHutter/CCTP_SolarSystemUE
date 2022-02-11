@@ -15,6 +15,7 @@ APlanet::APlanet()
 	surfaceSettings = CreateDefaultSubobject<USurfaceSettings>(TEXT("Surface Settings"));
 	gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
 	simpleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Simple Surface"));
+	simpleMesh->SetRelativeLocation(FVector::ZeroVector);
 
 	//static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	//simpleMesh->SetStaticMesh(SphereMeshAsset.Object);
@@ -26,8 +27,8 @@ APlanet::APlanet()
 		UTerrain* newTerrain = CreateDefaultSubobject<UTerrain>(TEXT("Terrain " + i));
 		terrain.Add(newTerrain);
 
-		UTerrain* newWater = CreateDefaultSubobject<UTerrain>(TEXT("Ocean " + i));
-		water.Add(newWater);
+		//UTerrain* newWater = CreateDefaultSubobject<UTerrain>(TEXT("Ocean " + i));
+		//water.Add(newWater);
 	}
 }
 
@@ -35,31 +36,12 @@ void APlanet::ManageLOD()
 {
 	const FVector camPos = playerCamera->GetCameraLocation();
 	const FVector planetLocation = GetActorLocation();
-	const float distance = FVector::Distance(camPos, planetLocation);
-
-	FVector directionToCamera = camPos - GetActorLocation();
-	directionToCamera.Normalize();
-
-	if (distance >= 100000.f && detailLevel != 0)
-	{
-		currentRes = 16;
-		detailLevel = 0;
-	}
-	else if (distance >= 50000.f && distance < 100000.f && detailLevel != 1)
-	{
-		currentRes = 64;
-		detailLevel = 1;
-	}
-	else if (distance < 50000.f && distance > surfaceSettings->radius * 1.1f && detailLevel != 2)
-	{
-		currentRes = 128;
-		detailLevel = 2;
-	}
 
 	for (int i = 0; i < terrain.Num(); i++)
 	{
 		terrain[i]->DetermineVisibility(planetLocation, camPos);
-		terrain[i]->BuildMesh(currentRes);
+		//terrain[i]->BuildMesh(currentRes);
+		//terrain[i]->StartBuildingMesh(currentRes);
 	}
 }
 
@@ -71,14 +53,17 @@ void APlanet::BeginPlay()
 	//const float radius = surfaceSettings->radius;
 	//simpleMesh->SetWorldScale3D(FVector(radius, radius, radius));
 	//simpleMesh->SetVisibility(basicPlanet);
-	SetupGravity();
 
-	Init();
+	//Init();
 	//GenerateWater();
 }
 
-void APlanet::Init()
+void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings)
 {
+	surfaceSettings->radius = radius;
+	surfaceSettings->seed = GetActorLocation();
+	surfaceSettings->noiseSettings = noiseSettings;
+
 	if (UWorld* World = GetWorld())
 		playerCamera = World->GetFirstPlayerController()->PlayerCameraManager;
 
@@ -91,7 +76,7 @@ void APlanet::Init()
 		terrain[i]->Init(surfaceSettings, directions[i]);
 		//water[i]->Init(surfaceSettings, directions[i], 16);
 	}
-
+	SetupGravity();
 	active = true;
 }
 
@@ -108,12 +93,29 @@ void APlanet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (active)
-		ManageLOD();
+	//if (active)
+	//	ManageLOD();
+
+	if (active && timer >= 1.f)
+	{
+		FVector camLocation = playerCamera->GetCameraLocation();
+		UE_LOG(LogTemp, Log, TEXT("Cam: %f,%f,%f"), camLocation.X, camLocation.Y, camLocation.Z);
+		GenerateTerrain();
+		timer = 0;
+	}
+	timer += GetWorld()->GetDeltaSeconds();
 }
 
 void APlanet::SetupGravity()
 {
 	gravityField->radius = surfaceSettings->radius * gravityOffset;// *(surfaceSettings->radius * gravityOffset);
+}
+
+void APlanet::GenerateTerrain()
+{
+	for (auto &t : terrain)
+	{
+		t->ConstructQuadTree();
+	}
 }
 

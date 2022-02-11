@@ -27,9 +27,6 @@ public:
 	//TArray<FNoiseSettings> noiseSettings;
 
 	UPROPERTY(EditAnywhere)
-	bool rebuild;
-
-	UPROPERTY(EditAnywhere)
 	USurfaceSettings* surfaceSettings;
 
 	UStaticMeshComponent* simpleMesh;
@@ -57,15 +54,19 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	int detailLevel = -1;
 
+	void Init(float radius, TArray<FNoiseSettings> noiseSettings);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void SetupGravity();
-	void Init();
+	void GenerateTerrain();
 
 	void GenerateWater();
-	
+
+	UPROPERTY(VisibleAnywhere)
 	bool active = false;
 	int currentRes = 16;
 	APlayerCameraManager* playerCamera;
+	float timer = 0;
 };

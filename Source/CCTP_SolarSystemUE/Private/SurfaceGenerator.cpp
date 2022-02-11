@@ -10,6 +10,8 @@ float SurfaceGenerator::ApplyNoise(FVector vertex, USurfaceSettings* settings)
 	if (settings->noiseSettings.Num() == 0)
 		return 1;
 
+	vertex += settings->seed;
+
 	for (int i=0; i<settings->noiseSettings.Num(); i++)
 	{
 		FNoiseSettings noiseSettings = settings->noiseSettings[i];

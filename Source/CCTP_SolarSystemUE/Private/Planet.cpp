@@ -95,7 +95,6 @@ void APlanet::Tick(float DeltaTime)
 
 	//if (active)
 	//	ManageLOD();
-
 	if (active && timer >= 1.f)
 	{
 		FVector camLocation = playerCamera->GetCameraLocation();

@@ -25,6 +25,8 @@ void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp)//, int32 _res
 	faceLocation = localUp * surfaceSettings->radius;
 	planetSeed = GetOwner()->GetActorLocation();
 	mesh->SetRelativeLocation(FVector::ZeroVector);
+	rootChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(), 1.f,
+		0, localUp, axisA, axisB, surfaceSettings);
 }
 
 // Called when the game starts
@@ -107,37 +109,42 @@ void UTerrain::BuildMesh(int resolution)
 
 void UTerrain::ConstructQuadTree()
 {
-	ResetData();
+	
 
 	FVector camLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
 	//UE_LOG(LogTemp, Log, TEXT("Cam: %f,%f,%f"), camLocation.X, camLocation.Y, camLocation.Z);
-	Chunk* parentChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(),1.f,
-		0, localUp, axisA, axisB, surfaceSettings);
-	parentChunk->GenerateChildren(camLocation);
-	
-	int i = 0;
-	//UE_LOG(LogTemp, Log, TEXT("Gen Mesh"));
-	int triOffset = 0;
-	for (auto &child : parentChunk->GetVisibleChildren())
+	//Chunk* parentChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(),1.f,
+	//	0, localUp, axisA, axisB, surfaceSettings);
+	bool update = rootChunk->GenerateChildren(camLocation);
+	UE_LOG(LogTemp, Log, TEXT("Update %i"), static_cast<int>(update));
+	UE_LOG(LogTemp, Log, TEXT("%fs"), GetWorld()->TimeSeconds);
+	if (update)
 	{
-		//UE_LOG(LogTemp, Log, TEXT("i: %i"), i);
-		FVector loc = child->location;
-		//UE_LOG(LogTemp, Log, TEXT("Up: %f,%f,%f"), loc.X, loc.Y, loc.Z);
-		FTriangleData triangleData = child->CalcuateTriangles(triOffset);
-		vertices.Append(triangleData.vertices);
-		triangles.Append(triangleData.triangles);
-		normals.Append(triangleData.normals);
-		uvs.Append(triangleData.uvs);
-		vertexColors.Append(triangleData.vertexColors);
-		tangents.Append(triangleData.tangents);
-		triOffset += triangleData.vertices.Num();
-		
-		i++;
+		ResetData();
+		int i = 0;
+		//UE_LOG(LogTemp, Log, TEXT("Gen Mesh"));
+		int triOffset = 0;
+		for (auto& child : rootChunk->GetVisibleChildren())
+		{
+			//UE_LOG(LogTemp, Log, TEXT("i: %i"), i);
+			FVector loc = child->location;
+			//UE_LOG(LogTemp, Log, TEXT("Up: %f,%f,%f"), loc.X, loc.Y, loc.Z);
+			FTriangleData triangleData = child->CalcuateTriangles(triOffset);
+			vertices.Append(triangleData.vertices);
+			triangles.Append(triangleData.triangles);
+			normals.Append(triangleData.normals);
+			uvs.Append(triangleData.uvs);
+			vertexColors.Append(triangleData.vertexColors);
+			tangents.Append(triangleData.tangents);
+			triOffset += triangleData.vertices.Num();
+
+			i++;
+		}
+
+		mesh->ClearAllMeshSections();
+		mesh->CreateMeshSection(i, vertices, triangles, normals, uvs, vertexColors, tangents, true);
+		mesh->SetRelativeLocation(FVector::ZeroVector, false, nullptr, ETeleportType::TeleportPhysics);
 	}
-	
-	mesh->ClearAllMeshSections();
-	mesh->CreateMeshSection(i, vertices, triangles, normals, uvs, vertexColors, tangents, true);
-	mesh->SetRelativeLocation(FVector::ZeroVector, false, nullptr, ETeleportType::TeleportPhysics);
 }
 
 void UTerrain::DetermineVisibility(FVector planetPos, FVector camPos)
@@ -238,8 +245,10 @@ Chunk::Chunk(Chunk* parent, FVector location, FVector planetLocation, float scal
 	this->surfaceSettings = surfaceSettings;
 }
 
-void Chunk::GenerateChildren(FVector cameraLocation)
+bool Chunk::GenerateChildren(FVector cameraLocation)
 {
+	bool modified = false;
+
 	if (detailLevel <= maxLOD)// && detailLevel >= 0)
 	{
 		UE_LOG(LogTemp, Log, TEXT("LOD: %i"), detailLevel);
@@ -250,30 +259,47 @@ void Chunk::GenerateChildren(FVector cameraLocation)
 		UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
 		if (distance <= detailDistances[detailLevel] * surfaceSettings->radius)
 		{
-			children.SetNum(4);
-			TArray<Chunk*> newChunks;
-			children[0] = new Chunk(this,
-				location + axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-				scale/2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
-
-			children[1] = new Chunk(this,
-				location + axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-				scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
-			
-			children[2] = new Chunk( this,
-				location - axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-				scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
-			
-			children[3] = new Chunk(this,
-				location - axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-				scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
-
-			for (auto &child : children)
+			UE_LOG(LogTemp, Log, TEXT("CHILDREN %i"), children.Num());
+			if (children.Num() < 4)
 			{
-				child->GenerateChildren(cameraLocation);
+				UE_LOG(LogTemp, Log, TEXT("GENERATING NEW CHILDREN"));
+				children.SetNum(4);
+				TArray<Chunk*> newChunks;
+				children[0] = new Chunk(this,
+					location + axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+
+				children[1] = new Chunk(this,
+					location + axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+
+				children[2] = new Chunk(this,
+					location - axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+
+				children[3] = new Chunk(this,
+					location - axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings);
+
+				modified = true;
+			}
+
+			UE_LOG(LogTemp, Log, TEXT("UPDATING CHILDREN"));
+			for (auto& child : children)
+			{
+				if (child->GenerateChildren(cameraLocation))
+					modified = true;
 			}
 		}
+		else if (children.Num() >= 4)
+		{
+			UE_LOG(LogTemp, Log, TEXT("REMOVING OLD CHILDREN"));
+			children.Empty();
+			modified = true;
+		}
+		UE_LOG(LogTemp, Log, TEXT("END OF BRANCH"));
 	}
+	return modified;
 }
 
 TArray<Chunk*> Chunk::GetVisibleChildren()

@@ -21,6 +21,39 @@ struct FTriangleData
 	TArray<FProcMeshTangent> tangents;
 };
 
+class CCTP_SOLARSYSTEMUE_API Chunk
+{
+public:
+	TArray<Chunk*> children;
+	Chunk* parent;
+	FVector location;
+	FVector planetLocation;
+	float scale;
+	int detailLevel;
+	FVector localUp;
+	FVector axisA;
+	FVector axisB;
+	USurfaceSettings* surfaceSettings;
+
+	Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel,
+		FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings);
+
+	bool GenerateChildren(FVector cameraLocation);
+	TArray<Chunk*> GetVisibleChildren();
+	FTriangleData CalcuateTriangles(int triangleOffset);
+
+	TMap<int, float> detailDistances =
+	{
+		{0, 1000.f},
+		{1, 8.f},
+		{2, 4.f},
+		{3, 2.f},
+		{4, 1.f},
+		{5, 0.5f}
+	};
+	const int maxLOD = 5;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CCTP_SOLARSYSTEMUE_API UTerrain : public UActorComponent
 {
@@ -76,37 +109,8 @@ private:
 	int currentResolution;
 	bool currentActive = false;
 	FProcMeshTangent basicTangent;
+
+	Chunk* rootChunk;
 };
 
-class CCTP_SOLARSYSTEMUE_API Chunk
-{
-public:
-	TArray<Chunk*> children;
-	Chunk* parent;
-	FVector location;
-	FVector planetLocation;
-	float scale;
-	int detailLevel;
-	FVector localUp;
-	FVector axisA;
-	FVector axisB;
-	USurfaceSettings* surfaceSettings;
 
-	Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel, 
-		FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings);
-
-	void GenerateChildren(FVector cameraLocation);
-	TArray<Chunk*> GetVisibleChildren();
-	FTriangleData CalcuateTriangles(int triangleOffset);
-
-	TMap<int, float> detailDistances =
-	{
-		{0, 1000.f},
-		{1, 8.f},
-		{2, 4.f},
-		{3, 2.f},
-		{4, 1.f},
-		{5, 0.5f}
-	};
-	const int maxLOD = 5;
-};

@@ -34,14 +34,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Instanced)
 	TArray<UTerrain*> terrain;
 
-	UPROPERTY(VisibleAnywhere, Instanced)
-	TArray<UTerrain*> water;
-
 	UPROPERTY(EditAnywhere)
 	UGravitationalField* gravityField;
-
-	UPROPERTY(EditAnywhere)
-	float waterHeight = .5f;
 
 	UPROPERTY(EditAnywhere)
 	float gravityOffset = 50;
@@ -49,7 +43,7 @@ public:
 	void ManageLOD();
 	int detailLevel = -1;
 
-	void Init(float radius, TArray<FNoiseSettings> noiseSettings);
+	void Init(float radius, TArray<FNoiseSettings> noiseSettings, int chunkResolution=8, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 
 protected:
 	// Called when the game starts or when spawned
@@ -57,10 +51,9 @@ protected:
 	void SetupGravity();
 	void GenerateTerrain();
 
-	void GenerateWater();
-
 	bool active = false;
 	int currentRes = 16;
 	APlayerCameraManager* playerCamera;
 	float timer = 0;
+	UMaterialInterface* planetMaterial;
 };

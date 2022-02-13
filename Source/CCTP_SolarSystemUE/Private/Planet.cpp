@@ -16,18 +16,12 @@ APlanet::APlanet()
 	gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
 	simpleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Simple Surface"));
 
-	//static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
-	//simpleMesh->SetStaticMesh(SphereMeshAsset.Object);
-	//
 	RootComponent = simpleMesh;
 
 	for (int i=0; i<6; i++)
 	{
-		UTerrain* newTerrain = CreateDefaultSubobject<UTerrain>(TEXT("Terrain " + i));
+		UTerrain* newTerrain = CreateDefaultSubobject<UTerrain>(*FString("Terrain" + FString::FromInt(i)));
 		terrain.Add(newTerrain);
-
-		//UTerrain* newWater = CreateDefaultSubobject<UTerrain>(TEXT("Ocean " + i));
-		//water.Add(newWater);
 	}
 }
 
@@ -38,7 +32,7 @@ void APlanet::ManageLOD()
 
 	for (int i = 0; i < terrain.Num(); i++)
 	{
-		terrain[i]->DetermineVisibility(planetLocation, camPos);
+		//terrain[i]->DetermineVisibility(planetLocation, camPos);
 		//terrain[i]->BuildMesh(currentRes);
 		//terrain[i]->StartBuildingMesh(currentRes);
 	}
@@ -57,11 +51,12 @@ void APlanet::BeginPlay()
 	//GenerateWater();
 }
 
-void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings)
+void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, int chunkResolution, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
 {
 	surfaceSettings->radius = radius;
 	surfaceSettings->seed = GetActorLocation();
 	surfaceSettings->noiseSettings = noiseSettings;
+	surfaceSettings->chunkResolution = chunkResolution;
 
 	if (UWorld* World = GetWorld())
 		playerCamera = World->GetFirstPlayerController()->PlayerCameraManager;
@@ -72,19 +67,10 @@ void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings)
 
 	for (int i=0; i<6; i++)
 	{
-		terrain[i]->Init(surfaceSettings, directions[i]);
-		//water[i]->Init(surfaceSettings, directions[i], 16);
+		terrain[i]->Init(surfaceSettings, directions[i], terrainMaterial, waterMaterial);
 	}
 	SetupGravity();
 	active = true;
-}
-
-void APlanet::GenerateWater()
-{
-	//for (int i=0; i<water.Num(); i++)
-	//{
-	//	water[i]->BuildMesh();
-	//}
 }
 
 // Called every frame

@@ -41,10 +41,12 @@ public:
 	bool GenerateChildren(FVector cameraLocation);
 	TArray<Chunk*> GetVisibleChildren();
 	FTriangleData CalcuateTriangles(int triangleOffset);
+	void CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleData& waterData);
+	void CreateTriangle(FTriangleData& triangleData, FVector vertexPos, FVector2D percent, int resolution, int triOffset, int x, int y, float elavation = 1);
 
 	TMap<int, float> detailDistances =
 	{
-		{0, 1000.f},
+		{0, 100000.f},
 		{1, 1.1f},
 		{2, 1.f},
 		{3, .9f},
@@ -53,7 +55,7 @@ public:
 	};
 	const int maxLOD = 5;
 	FString id;
-	int resolution = 16;
+	//int resolution = 16;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -64,7 +66,7 @@ class CCTP_SOLARSYSTEMUE_API UTerrain : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UTerrain();
-	void Init(USurfaceSettings* _settings, FVector _localUp = FVector(0.f, 0.f, 1.f));
+	void Init(USurfaceSettings* _settings, FVector _localUp = FVector(0.f, 0.f, 1.f), UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 
 protected:
 	// Called when the game starts
@@ -72,9 +74,9 @@ protected:
 
 public:	
 	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void BuildMesh(int resolution);
+	//void BuildMesh(int resolution);
 	void ConstructQuadTree();
-	void DetermineVisibility(FVector planetPos, FVector camPos);
+	//void DetermineVisibility(FVector planetPos, FVector camPos);
 	void ResetData();
 
 	int detailLevel = -1;
@@ -83,17 +85,11 @@ public:
 	static FVector CalculateNormal(FVector vertexPos);
 
 private:
-	UPROPERTY(VisibleAnywhere)
-	TArray<FVector> vertices;
-	TArray<FVector> normals;
-	UPROPERTY(VisibleAnywhere)
-	TArray<int32> triangles;
-	TArray<FVector2D> uvs;
-	TArray<FColor> vertexColors;
-	TArray<FProcMeshTangent> tangents;
 	int terrainResolution;
 	UPROPERTY(VisibleAnywhere)
 	UProceduralMeshComponent* mesh;
+	UPROPERTY(VisibleAnywhere)
+	UProceduralMeshComponent* water;
 
 	UPROPERTY(VisibleAnywhere)
 	FVector localUp;
@@ -113,6 +109,10 @@ private:
 	FProcMeshTangent basicTangent;
 
 	Chunk* rootChunk;
+	//UMaterialInterface* material;
+
+	FTriangleData terrainData;
+	FTriangleData waterData;
 };
 
 

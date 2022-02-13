@@ -36,14 +36,15 @@ float SurfaceGenerator::ApplyNoise(FVector vertex, USurfaceSettings* settings)
 float SurfaceGenerator::SimpleNoise(FVector coord, FSimpleNoise settings)
 {
 	float noise = 0;
-	float amplitude = 1;
+	float amplitude = settings.amplitude;
 	float frequency = settings.baseRoughness;
 
 	for (int i = 0; i < settings.noiseLayers; i++)
 	{
-		float v = FMath::PerlinNoise3D(coord * frequency);
-		noise += (v + 1) * 0.5f * amplitude;
-		frequency *= 2;
+		float v = FMath::PerlinNoise3D(coord * frequency * settings.frequencyMultiplier);
+		//noise += (v + 1) * 0.5f * amplitude;
+		noise += v  * amplitude;
+		frequency *= settings.baseRoughness;
 		amplitude *= settings.persistence;
 	}
 
@@ -54,13 +55,13 @@ float SurfaceGenerator::SimpleNoise(FVector coord, FSimpleNoise settings)
 float SurfaceGenerator::RigidNoise(FVector coord, FRigidNoise settings)
 {
 	float noise = 0;
-	float amplitude = 1;
+	float amplitude = settings.amplitude;
 	float weight = 1;
 	float frequency = settings.baseRoughness;
 
 	for (int i = 0; i < settings.noiseLayers; i++)
 	{
-		float v = 1 - FMath::PerlinNoise3D(coord * frequency);
+		float v = 1 - FMath::PerlinNoise3D(coord * frequency * settings.frequencyMultiplier);
 
 		v *= v;
 		v *= weight;

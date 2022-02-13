@@ -30,7 +30,16 @@ public:
 	float maxRadius = 20000.f;
 
 	UPROPERTY(EditAnywhere)
+	int planetChunkResolution = 8;
+
+	UPROPERTY(EditAnywhere)
 	TArray<FNoiseSettings> noiseSettings;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* planetMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* waterMaterial;
 
 protected:
 	// Called when the game starts or when spawned

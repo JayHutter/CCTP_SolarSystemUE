@@ -28,7 +28,6 @@ void ASolarSystem::PlacePlanets()
 	{
 		FActorSpawnParameters spawnParams;
 		FRotator rotator;
-
 		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(planetTemplate, location, rotator, spawnParams);
 		planets.Add(newPlanet);
 		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
@@ -41,7 +40,8 @@ void ASolarSystem::BuildPlanets()
 {
 	for (int i=0; i<planets.Num(); i++)
 	{
-		planets[i]->Init(miniumRadius, noiseSettings);
+		float radius = FMath::FRandRange(miniumRadius, maxRadius);
+		planets[i]->Init(radius, noiseSettings, planetChunkResolution, planetMaterial, waterMaterial);
 	}
 }
 

@@ -6,12 +6,13 @@
 // Sets default values for this component's properties
 UTerrain::UTerrain()
 {
-	mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Procedural Mesh"));
+	mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Terrain Mesh"));
+	water = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Water Mesh"));
 	basicTangent = FProcMeshTangent(0.f, 1.f, 0.f);
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp)//, int32 _resolution)
+void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
 {
 	//resolution = _resolution;
 	localUp = _localUp;
@@ -25,21 +26,18 @@ void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp)//, int32 _res
 	faceLocation = localUp * surfaceSettings->radius;
 	planetSeed = GetOwner()->GetActorLocation();
 	mesh->SetWorldLocation(GetOwner()->GetActorLocation());
+	water->SetWorldLocation(GetOwner()->GetActorLocation());
+
+	if (terrainMaterial)
+		mesh->SetMaterial(0, terrainMaterial);
+
+	if (waterMaterial)
+		water->SetMaterial(0, waterMaterial);
+
 	rootChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(), 1.f,
 		0, localUp, axisA, axisB, surfaceSettings, "0");
 }
-
-// Called when the game starts
-//void UTerrain::BeginPlay()
-//{
-//	Super::BeginPlay();	
-//}
-//
-//void UTerrain::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-//{
-//	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-//}
-
+/*
 void UTerrain::BuildMesh(int resolution)
 {
 	//mesh->SetRelativeLocation(FVector::ZeroVector);
@@ -106,6 +104,7 @@ void UTerrain::BuildMesh(int resolution)
 	
 	//mesh->SetRelativeLocation(FVector::ZeroVector);
 }
+*/
 
 void UTerrain::ConstructQuadTree()
 {
@@ -114,33 +113,22 @@ void UTerrain::ConstructQuadTree()
 	if (rootChunk->GenerateChildren(camLocation))
 	{
 		ResetData();
-		int i = 0;
-		//UE_LOG(LogTemp, Log, TEXT("Gen Mesh"));
-		int triOffset = 0;
-		for (auto& child : rootChunk->GetVisibleChildren())
-		{
-			//UE_LOG(LogTemp, Log, TEXT("i: %i"), i);
-			FVector loc = child->location;
-			//UE_LOG(LogTemp, Log, TEXT("Up: %f,%f,%f"), loc.X, loc.Y, loc.Z);
-			FTriangleData triangleData = child->CalcuateTriangles(triOffset);
-			vertices.Append(triangleData.vertices);
-			triangles.Append(triangleData.triangles);
-			normals.Append(triangleData.normals);
-			uvs.Append(triangleData.uvs);
-			vertexColors.Append(triangleData.vertexColors);
-			tangents.Append(triangleData.tangents);
-			triOffset += triangleData.vertices.Num();
 
-			i++;
+		for (auto&child : rootChunk->GetVisibleChildren())
+		{
+			child->CalculateTerrainAndWaterTris(terrainData, waterData);
 		}
 
 		mesh->ClearAllMeshSections();
-		mesh->CreateMeshSection(i, vertices, triangles, normals, uvs, vertexColors, tangents, true);
+		water->ClearAllMeshSections();
+		mesh->CreateMeshSection(0, terrainData.vertices, terrainData.triangles, terrainData.normals, terrainData.uvs, terrainData.vertexColors, terrainData.tangents, true);
+		water->CreateMeshSection(0, waterData.vertices, waterData.triangles, waterData.normals, waterData.uvs, waterData.vertexColors, waterData.tangents, false);
 		ResetData(); //Empty arrays to save mem
 	}
 	UE_LOG(LogTemp, Log, TEXT("TIME END: %fs"), GetWorld()->TimeSeconds);
 }
 
+/*
 void UTerrain::DetermineVisibility(FVector planetPos, FVector camPos)
 {
 	const float planetDistance = FVector::Distance(planetPos, camPos);
@@ -186,15 +174,23 @@ void UTerrain::DetermineVisibility(FVector planetPos, FVector camPos)
 
 	BuildMesh(resolution);
 }
+*/
 
 void UTerrain::ResetData()
 {
-	vertices.Reset();
-	normals.Reset();
-	triangles.Reset();
-	uvs.Reset();
-	vertexColors.Reset();
-	tangents.Reset();
+	terrainData.vertices.Reset();
+	terrainData.normals.Reset();
+	terrainData.triangles.Reset();
+	terrainData.uvs.Reset();
+	terrainData.vertexColors.Reset();
+	terrainData.tangents.Reset();
+
+	waterData.vertices.Reset();
+	waterData.normals.Reset();
+	waterData.triangles.Reset();
+	waterData.uvs.Reset();
+	waterData.vertexColors.Reset();
+	waterData.tangents.Reset();
 }
 
 FVector UTerrain::CubeToSphere(FVector vertexPos)
@@ -317,11 +313,10 @@ TArray<Chunk*> Chunk::GetVisibleChildren()
 
 FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 {
-	//const int resolution = 8;
+	const int resolution = surfaceSettings->chunkResolution;
 	FTriangleData data;
 	int tri = 0;
 	FProcMeshTangent tangent = FProcMeshTangent(0.f, 1.f, 0.f);
-
 	for (int y = 0; y < resolution; y++)
 	{
 		for (int x = 0; x < resolution; x++)
@@ -333,7 +328,6 @@ FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 				((percent.Y - 0.5f) * 2 * axisA + (percent.X - 0.5f) * 2 * axisB) *scale;
 			FVector pointOnUnitSphere = UTerrain::CubeToSphere(pointOnUnitCube);
 
-
 			float elevation = 0;
 			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius + planetLocation, surfaceSettings);
 			FVector vertex = pointOnUnitSphere * surfaceSettings->radius * (1 + elevation);
@@ -341,7 +335,7 @@ FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 			data.vertices.Add(vertex);
 			data.normals.Add(UTerrain::CalculateNormal(vertex));
 			data.tangents.Add(tangent);
-			data.vertexColors.Add(FColor::Green);
+			data.vertexColors.Add(FColor(elevation*255, elevation * 255, elevation * 255));
 			data.uvs.Add(percent);
 
 			if (x != resolution - 1 && y != resolution - 1)
@@ -359,4 +353,56 @@ FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 	}
 
 	return data;
+}
+
+void Chunk::CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleData& waterData)
+{
+	const int resolution = surfaceSettings->chunkResolution;
+	int tri = 0;
+	int triOffset = terrainData.vertices.Num();
+	FProcMeshTangent tangent = FProcMeshTangent(0.f, 1.f, 0.f);
+	for (int y = 0; y < resolution; y++)
+	{
+		for (int x = 0; x < resolution; x++)
+		{
+			FVector2D percent = (FVector2D(x, y) / (resolution - 1));
+
+			FVector pointOnUnitCube = location +
+				((percent.Y - 0.5f) * 2 * axisA + (percent.X - 0.5f) * 2 * axisB) * scale;
+			FVector pointOnUnitSphere = UTerrain::CubeToSphere(pointOnUnitCube);
+
+			float elevation = 0;
+			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius + planetLocation, surfaceSettings);
+			FVector vertex = pointOnUnitSphere * surfaceSettings->radius * (1 + elevation);
+			FVector waterVertex = pointOnUnitSphere * surfaceSettings->radius;// *(1 + surfaceSettings->noiseSettings[0].simpleNoiseSettings.strength * 0.5f);
+
+			CreateTriangle(terrainData, vertex, percent, resolution, triOffset, x, y, elevation);
+			CreateTriangle(waterData, waterVertex, percent, resolution, triOffset, x, y);
+			if (x != resolution - 1 && y != resolution - 1)
+				tri += 6;
+		}
+	}
+}
+
+void Chunk::CreateTriangle(FTriangleData& triangleData, FVector vertexPos, FVector2D percent, int resolution,
+	int triOffset, int x, int y, float elevation)
+{
+	int i = triOffset + x + y * resolution;
+
+	triangleData.vertices.Add(vertexPos);
+	triangleData.normals.Add(UTerrain::CalculateNormal(vertexPos));
+	triangleData.tangents.Add(FProcMeshTangent(0.f, 1.f, 0.f));
+	triangleData.vertexColors.Add(FColor(elevation * 255, elevation * 255, elevation * 255));
+	triangleData.uvs.Add(percent);
+
+	if (x != resolution - 1 && y != resolution - 1)
+	{
+		triangleData.triangles.Add(i);
+		triangleData.triangles.Add(i + resolution + 1);
+		triangleData.triangles.Add(i + resolution);
+
+		triangleData.triangles.Add(i);
+		triangleData.triangles.Add(i + 1);
+		triangleData.triangles.Add(i + resolution + 1);
+	}
 }

@@ -22,6 +22,12 @@ struct FSimpleNoise
 	float baseRoughness = 1;
 
 	UPROPERTY(EditAnywhere)
+	float frequencyMultiplier = 1;
+
+	UPROPERTY(EditAnywhere)
+	float amplitude = 1;
+
+	UPROPERTY(EditAnywhere)
 	float roughness = 2.f;
 
 	UPROPERTY(EditAnywhere)

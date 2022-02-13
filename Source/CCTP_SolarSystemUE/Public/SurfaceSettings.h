@@ -21,6 +21,9 @@ public:
 	float radius = 500.f;
 
 	UPROPERTY(EditAnywhere)
+	int chunkResolution = 8;
+
+	UPROPERTY(EditAnywhere)
 	TArray<FNoiseSettings> noiseSettings;
 
 	FVector seed;

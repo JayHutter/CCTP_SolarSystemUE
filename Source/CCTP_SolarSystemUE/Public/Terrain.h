@@ -19,6 +19,7 @@ struct FTriangleData
 	TArray<FVector2D> uvs;
 	TArray<FColor> vertexColors;
 	TArray<FProcMeshTangent> tangents;
+	int id;
 };
 
 class CCTP_SOLARSYSTEMUE_API Chunk
@@ -36,13 +37,14 @@ public:
 	USurfaceSettings* surfaceSettings;
 
 	Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel,
-		FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, FString id="0");
+		FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, int id=0);
 
-	bool GenerateChildren(FVector cameraLocation);
+	bool GenerateChildren(FVector cameraLocation, UProceduralMeshComponent* mesh=nullptr);
 	TArray<Chunk*> GetVisibleChildren();
 	FTriangleData CalcuateTriangles(int triangleOffset);
 	void CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleData& waterData);
 	void CreateTriangle(FTriangleData& triangleData, FVector vertexPos, FVector2D percent, int resolution, int triOffset, int x, int y, float elavation = 1);
+	void RemoveMesh(UProceduralMeshComponent* mesh);
 
 	TMap<int, float> detailDistances =
 	{
@@ -54,8 +56,10 @@ public:
 		{5, .7f}
 	};
 	const int maxLOD = 5;
-	FString id;
+	FString chunkName;
 	//int resolution = 16;
+	bool built = false;
+	int id = -1;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -66,6 +70,7 @@ class CCTP_SOLARSYSTEMUE_API UTerrain : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UTerrain();
+	~UTerrain();
 	void Init(USurfaceSettings* _settings, FVector _localUp = FVector(0.f, 0.f, 1.f), UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 
 protected:
@@ -83,6 +88,8 @@ public:
 	FVector GetFaceLocation() const { return faceLocation; }
 	static FVector CubeToSphere(FVector vertexPos);
 	static FVector CalculateNormal(FVector vertexPos);
+
+	void BuildMsh();
 
 private:
 	int terrainResolution;
@@ -109,10 +116,10 @@ private:
 	FProcMeshTangent basicTangent;
 
 	Chunk* rootChunk;
-	//UMaterialInterface* material;
 
 	FTriangleData terrainData;
 	FTriangleData waterData;
+	int id = 0;
+
+	TArray<FTriangleData> vertexBuffer;
 };
-
-

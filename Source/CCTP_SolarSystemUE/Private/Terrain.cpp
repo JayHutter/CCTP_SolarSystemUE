@@ -3,6 +3,8 @@
 
 #include "Terrain.h"
 
+#include "Camera/CameraModifier_CameraShake.h"
+
 // Sets default values for this component's properties
 UTerrain::UTerrain()
 {
@@ -10,6 +12,12 @@ UTerrain::UTerrain()
 	water = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Water Mesh"));
 	basicTangent = FProcMeshTangent(0.f, 1.f, 0.f);
 	PrimaryComponentTick.bCanEverTick = true;
+}
+
+UTerrain::~UTerrain()
+{
+	//mesh->ClearAllMeshSections();
+	//water->ClearAllMeshSections();
 }
 
 void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
@@ -35,7 +43,9 @@ void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp, UMaterialInte
 		water->SetMaterial(0, waterMaterial);
 
 	rootChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(), 1.f,
-		0, localUp, axisA, axisB, surfaceSettings, "0");
+		0, localUp, axisA, axisB, surfaceSettings, 0);
+
+	mesh->ClearAllMeshSections();
 }
 /*
 void UTerrain::BuildMesh(int resolution)
@@ -108,24 +118,38 @@ void UTerrain::BuildMesh(int resolution)
 
 void UTerrain::ConstructQuadTree()
 {
-	UE_LOG(LogTemp, Log, TEXT("TIME START: %fs"), GetWorld()->TimeSeconds);
 	FVector camLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
-	if (rootChunk->GenerateChildren(camLocation))
+	//if (rootChunk->GenerateChildren(camLocation))
+	//{
+	//	ResetData();
+	//
+	//	mesh->ClearAllMeshSections();
+	//	water->ClearAllMeshSections();
+	//
+	//	int i = 0;
+	//	for (auto&child : rootChunk->GetVisibleChildren())
+	//	{
+	//		child->CalculateTerrainAndWaterTris(terrainData, waterData);
+	//		//FTriangleData data = child->CalcuateTriangles(0);
+	//		//mesh->CreateMeshSection(i++, data.vertices, data.triangles, data.normals, data.uvs, data.vertexColors, data.tangents, true);
+	//	}
+	//
+	//	mesh->CreateMeshSection(i++, terrainData.vertices, terrainData.triangles, terrainData.normals, terrainData.uvs, terrainData.vertexColors, terrainData.tangents, true);
+	//	water->CreateMeshSection(0, waterData.vertices, waterData.triangles, waterData.normals, waterData.uvs, waterData.vertexColors, waterData.tangents, false);
+	//	ResetData(); //Empty arrays to save mem
+	//}
+
+	if (rootChunk->GenerateChildren(camLocation, mesh))
 	{
-		ResetData();
-
-		for (auto&child : rootChunk->GetVisibleChildren())
+		for (auto& child : rootChunk->GetVisibleChildren())
 		{
-			child->CalculateTerrainAndWaterTris(terrainData, waterData);
+			if (!child->built)
+			{
+				FTriangleData data = child->CalcuateTriangles(0);
+				mesh->CreateMeshSection(child->id, data.vertices, data.triangles, data.normals, data.uvs, data.vertexColors, data.tangents, true);
+			}
 		}
-
-		mesh->ClearAllMeshSections();
-		water->ClearAllMeshSections();
-		mesh->CreateMeshSection(0, terrainData.vertices, terrainData.triangles, terrainData.normals, terrainData.uvs, terrainData.vertexColors, terrainData.tangents, true);
-		water->CreateMeshSection(0, waterData.vertices, waterData.triangles, waterData.normals, waterData.uvs, waterData.vertexColors, waterData.tangents, false);
-		ResetData(); //Empty arrays to save mem
 	}
-	UE_LOG(LogTemp, Log, TEXT("TIME END: %fs"), GetWorld()->TimeSeconds);
 }
 
 /*
@@ -221,7 +245,7 @@ FVector UTerrain::CalculateNormal(FVector vertexPos)
 
 //Chunk Class
 Chunk::Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel,
-	FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, FString id)
+	FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, int id)
 {
 	children.SetNum(0);
 	this->parent = parent;
@@ -236,7 +260,7 @@ Chunk::Chunk(Chunk* parent, FVector location, FVector planetLocation, float scal
 	this->id = id;
 }
 
-bool Chunk::GenerateChildren(FVector cameraLocation)
+bool Chunk::GenerateChildren(FVector cameraLocation, UProceduralMeshComponent* mesh)
 {
 	bool modified = false;
 
@@ -250,6 +274,8 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 		//UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
 		if (distance <= detailDistances[detailLevel] * surfaceSettings->radius)
 		{
+			RemoveMesh(mesh);
+
 			if (children.Num() < 4)
 			{
 				//UE_LOG(LogTemp, Log, TEXT("GENERATING NEW CHILDREN"));
@@ -257,19 +283,19 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 				TArray<Chunk*> newChunks;
 				children[0] = new Chunk(this,
 					location + axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id +"0");
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id*4 + 1);
 
 				children[1] = new Chunk(this,
 					location + axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "1");
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id * 4 + 2);
 
 				children[2] = new Chunk(this,
 					location - axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "2");
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id * 4 + 3);
 
 				children[3] = new Chunk(this,
 					location - axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "3");
+					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id * 4 + 4);
 
 				modified = true;
 			}
@@ -277,18 +303,48 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 			//UE_LOG(LogTemp, Log, TEXT("UPDATING CHILDREN"));
 			for (auto& child : children)
 			{
-				if (child->GenerateChildren(cameraLocation))
+				if (child->GenerateChildren(cameraLocation, mesh))
 					modified = true;
 			}
 		}
 		else if (children.Num() >= 4)
 		{
 			//UE_LOG(LogTemp, Log, TEXT("REMOVING OLD CHILDREN"));
+			for (auto child : children)
+				child->RemoveMesh(mesh);
+
 			children.Empty();
 			modified = true;
 		}
-		//UE_LOG(LogTemp, Log, TEXT("END OF BRANCH"));
 	}
+
+	/*
+	 * if (current chunk has no children && is not built)
+	 *     build the chunk
+	 *	   built = true
+	 *
+	 *	   issue with this approach is it requires each chunk to have its own proc mesh
+	 *	   which isnt easy to create/destroy outside of an object constructor
+	 *	   cant just assign 4 chunks to each chunk in their constructors because it will stack overflow
+	 *
+	 *	   need to look into object instantiation
+	 *	   https://docs.unrealengine.com/4.27/en-US/ProgrammingAndScripting/ProgrammingWithCPP/UnrealArchitecture/Objects/Creation/
+	 *
+	 *	   alternative - use mesh sections for each chunk
+	 */
+
+	//If no children and not built - must be end of tree so build it
+	//if (children.Num() == 0 && !built)
+	//{
+	//	FTriangleData data = CalcuateTriangles(0);
+	//
+	//	if (meshSection == -1)
+	//		meshSection = id++;
+	//
+	//	mesh->CreateMeshSection(meshSection, data.vertices, data.triangles, data.normals, data.uvs, data.vertexColors, data.tangents, true);
+	//	built = true;
+	//}
+
 	return modified;
 }
 
@@ -374,7 +430,8 @@ void Chunk::CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleDa
 			float elevation = 0;
 			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius + planetLocation, surfaceSettings);
 			FVector vertex = pointOnUnitSphere * surfaceSettings->radius * (1 + elevation);
-			FVector waterVertex = pointOnUnitSphere * surfaceSettings->radius;// *(1 + surfaceSettings->noiseSettings[0].simpleNoiseSettings.strength * 0.5f);
+			FVector waterVertex = pointOnUnitSphere * surfaceSettings->radius *(1 + surfaceSettings->noiseSettings[0].simpleNoiseSettings.strength * 0.2f);
+			//I dont like this approach for water height as it requires the base layer to always be simple noise (though it usually should be)
 
 			CreateTriangle(terrainData, vertex, percent, resolution, triOffset, x, y, elevation);
 			CreateTriangle(waterData, waterVertex, percent, resolution, triOffset, x, y);
@@ -404,5 +461,14 @@ void Chunk::CreateTriangle(FTriangleData& triangleData, FVector vertexPos, FVect
 		triangleData.triangles.Add(i);
 		triangleData.triangles.Add(i + 1);
 		triangleData.triangles.Add(i + resolution + 1);
+	}
+}
+
+void Chunk::RemoveMesh(UProceduralMeshComponent* mesh)
+{
+	if (mesh && built)
+	{
+		mesh->ClearMeshSection(id);
+		built = false;
 	}
 }

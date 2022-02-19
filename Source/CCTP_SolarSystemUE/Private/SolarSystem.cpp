@@ -17,6 +17,12 @@ void ASolarSystem::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (planetChunkResolution <= 1)
+		planetChunkResolution = 2;
+
+	if (waterHeight < 0)
+		waterHeight = 0;
+
 	PlacePlanets();
 	BuildPlanets();
 }
@@ -24,24 +30,36 @@ void ASolarSystem::BeginPlay()
 void ASolarSystem::PlacePlanets()
 {
 	FVector location = GetActorLocation();
+	const FRotator rotator;
+	const FActorSpawnParameters spawnParams;
+
+	star = GetWorld()->SpawnActor<AStar>(starTemplate, location, rotator, spawnParams);
+	star->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+
 	for (int i = 0; i < planetCount; i++)
 	{
-		FActorSpawnParameters spawnParams;
-		FRotator rotator;
+		location += FVector(maxRadius * 200, FMath::RandRange(-maxRadius * 20, maxRadius * 20), FMath::RandRange(-maxRadius * 10, maxRadius * 10));
 		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(planetTemplate, location, rotator, spawnParams);
 		planets.Add(newPlanet);
 		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 		//newPlanet->Init(miniumRadius, noiseSettings);
-		location += FVector(maxRadius * 10, FMath::RandRange(-maxRadius*20, maxRadius*20), FMath::RandRange(-maxRadius*10, maxRadius*10));
+		
 	}
 }
 
 void ASolarSystem::BuildPlanets()
 {
+	star->Init(maxRadius, starMaterial);
+
 	for (int i=0; i<planets.Num(); i++)
 	{
-		float radius = FMath::FRandRange(miniumRadius, maxRadius);
-		planets[i]->Init(radius, noiseSettings, planetChunkResolution, planetMaterial, waterMaterial);
+		float offset = i * seed;
+		FVector terrainSeed = FVector(offset, offset, offset) + GetActorLocation();
+
+		float radius = ((FMath::PerlinNoise3D(terrainSeed) + 1) * 0.5f) * maxRadius;
+		int resolution = FMath::Pow(2, planetChunkResolution);
+
+		planets[i]->Init(maxRadius, noiseSettings, waterHeight, terrainSeed, resolution, planetMaterial, waterMaterial);
 	}
 }
 

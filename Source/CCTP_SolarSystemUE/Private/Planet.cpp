@@ -51,12 +51,13 @@ void APlanet::BeginPlay()
 	//GenerateWater();
 }
 
-void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, int chunkResolution, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
+void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, float waterHeight, FVector generationSeed, int chunkResolution, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
 {
 	surfaceSettings->radius = radius;
-	surfaceSettings->seed = GetActorLocation();
+	surfaceSettings->seed = generationSeed;
 	surfaceSettings->noiseSettings = noiseSettings;
 	surfaceSettings->chunkResolution = chunkResolution;
+	surfaceSettings->waterHeight = waterHeight;
 
 	if (UWorld* World = GetWorld())
 		playerCamera = World->GetFirstPlayerController()->PlayerCameraManager;
@@ -83,7 +84,6 @@ void APlanet::Tick(float DeltaTime)
 	if (active && timer >= 1.f)
 	{
 		FVector camLocation = playerCamera->GetCameraLocation();
-		UE_LOG(LogTemp, Log, TEXT("Cam: %f,%f,%f"), camLocation.X, camLocation.Y, camLocation.Z);
 		GenerateTerrain();
 		timer = 0;
 	}

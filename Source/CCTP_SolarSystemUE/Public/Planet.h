@@ -26,7 +26,7 @@ public:
 	//UPROPERTY(EditAnywhere)
 	//TArray<FNoiseSettings> noiseSettings;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Instanced)
 	USurfaceSettings* surfaceSettings;
 
 	UStaticMeshComponent* simpleMesh;
@@ -43,7 +43,7 @@ public:
 	void ManageLOD();
 	int detailLevel = -1;
 
-	void Init(float radius, TArray<FNoiseSettings> noiseSettings, int chunkResolution=8, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
+	void Init(float radius, TArray<FNoiseSettings> noiseSettings, float waterHeight, FVector generationSeed, int chunkResolution=8, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 
 protected:
 	// Called when the game starts or when spawned

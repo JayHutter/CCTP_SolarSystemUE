@@ -9,7 +9,7 @@
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class CCTP_SOLARSYSTEMUE_API USurfaceSettings : public UActorComponent
+class CCTP_SOLARSYSTEMUE_API USurfaceSettings : public UObject
 {
 	GENERATED_BODY()
 
@@ -24,7 +24,11 @@ public:
 	int chunkResolution = 8;
 
 	UPROPERTY(EditAnywhere)
+	float waterHeight = 0.5f;
+
+	UPROPERTY(EditAnywhere)
 	TArray<FNoiseSettings> noiseSettings;
 
+	UPROPERTY(EditAnywhere)
 	FVector seed;
 };

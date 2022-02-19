@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Planet.h"
+#include "Star.h"
+#include "SurfaceSettings.h"
 #include "SolarSystem.generated.h"
 
 UCLASS()
@@ -18,6 +20,12 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<APlanet>  planetTemplate;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AStar> starTemplate;
+
+	UPROPERTY(VisibleAnywhere)
+	AStar* star;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<APlanet*> planets;
@@ -33,6 +41,12 @@ public:
 	int planetChunkResolution = 8;
 
 	UPROPERTY(EditAnywhere)
+	float seed = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+	float waterHeight=0.5f;
+
+	UPROPERTY(EditAnywhere)
 	TArray<FNoiseSettings> noiseSettings;
 
 	UPROPERTY(EditAnywhere)
@@ -40,6 +54,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* waterMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* starMaterial;
 
 protected:
 	// Called when the game starts or when spawned

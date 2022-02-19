@@ -46,7 +46,7 @@ public:
 
 	TMap<int, float> detailDistances =
 	{
-		{0, 100000.f},
+		{0, 2.f},
 		{1, 1.1f},
 		{2, 1.f},
 		{3, .9f},
@@ -55,7 +55,6 @@ public:
 	};
 	const int maxLOD = 5;
 	FString id;
-	//int resolution = 16;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -104,6 +103,7 @@ private:
 	FVector faceLocation;
 
 	USurfaceSettings* surfaceSettings;
+
 	int currentResolution;
 	bool currentActive = false;
 	FProcMeshTangent basicTangent;

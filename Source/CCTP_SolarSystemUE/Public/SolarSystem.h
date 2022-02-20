@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AStar> starTemplate;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ASatellite> satelliteTemplate;
+
 	UPROPERTY(VisibleAnywhere)
 	AStar* star;
 
@@ -58,11 +61,17 @@ public:
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* starMaterial;
 
+	UPROPERTY(EditAnywhere)
+	float timescale = 1.f;
+
+	TArray<UCelestialBody*> celestialBodies;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void PlacePlanets();
 	void BuildPlanets();
+	void SimulateGravity();
 
 	USceneComponent* root;
 public:	

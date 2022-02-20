@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Terrain.h"
 #include "GravitationalField.h"
+#include "CelestialBody.h"
+#include "Satellite.h"
 #include "Planet.generated.h"
 
 UCLASS()
@@ -29,7 +31,7 @@ public:
 	UPROPERTY(EditAnywhere, Instanced)
 	USurfaceSettings* surfaceSettings;
 
-	UStaticMeshComponent* simpleMesh;
+	UCelestialBody* body;
 
 	UPROPERTY(VisibleAnywhere, Instanced)
 	TArray<UTerrain*> terrain;

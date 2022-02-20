@@ -14,9 +14,9 @@ APlanet::APlanet()
 	PrimaryActorTick.bCanEverTick = true;
 	surfaceSettings = CreateDefaultSubobject<USurfaceSettings>(TEXT("Surface Settings"));
 	gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
-	simpleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Simple Surface"));
+	body = CreateDefaultSubobject<UCelestialBody>(TEXT("Body"));
 
-	RootComponent = simpleMesh;
+	RootComponent = body;
 
 	for (int i=0; i<6; i++)
 	{
@@ -29,26 +29,12 @@ void APlanet::ManageLOD()
 {
 	const FVector camPos = playerCamera->GetCameraLocation();
 	const FVector planetLocation = GetActorLocation();
-
-	for (int i = 0; i < terrain.Num(); i++)
-	{
-		//terrain[i]->DetermineVisibility(planetLocation, camPos);
-		//terrain[i]->BuildMesh(currentRes);
-		//terrain[i]->StartBuildingMesh(currentRes);
-	}
 }
 
 // Called when the game starts or when spawned
 void APlanet::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//const float radius = surfaceSettings->radius;
-	//simpleMesh->SetWorldScale3D(FVector(radius, radius, radius));
-	//simpleMesh->SetVisibility(basicPlanet);
-
-	//Init();
-	//GenerateWater();
 }
 
 void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, float waterHeight, FVector generationSeed, int chunkResolution, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
@@ -72,6 +58,8 @@ void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, float wat
 	}
 	SetupGravity();
 	active = true;
+
+	body->mass = radius * radius * radius;
 }
 
 // Called every frame
@@ -102,4 +90,3 @@ void APlanet::GenerateTerrain()
 		t->ConstructQuadTree();
 	}
 }
-

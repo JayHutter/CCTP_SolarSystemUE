@@ -42,14 +42,13 @@ void ASolarSystem::PlacePlanets()
 		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(planetTemplate, location, rotator, spawnParams);
 		planets.Add(newPlanet);
 		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
-		//newPlanet->Init(miniumRadius, noiseSettings);
-		
 	}
 }
 
 void ASolarSystem::BuildPlanets()
 {
 	star->Init(maxRadius, starMaterial);
+	celestialBodies.Add(star->body);
 
 	for (int i=0; i<planets.Num(); i++)
 	{
@@ -60,6 +59,37 @@ void ASolarSystem::BuildPlanets()
 		int resolution = FMath::Pow(2, planetChunkResolution);
 
 		planets[i]->Init(maxRadius, noiseSettings, waterHeight, terrainSeed, resolution, planetMaterial, waterMaterial);
+		celestialBodies.Add(planets[i]->body);
+	}
+}
+
+void ASolarSystem::SimulateGravity()
+{
+	for (auto bodyA : celestialBodies)
+	{
+		for (auto bodyB : celestialBodies)
+		{
+			if (bodyA == bodyB)
+				continue;
+
+			//FVector posA = bodyA->GetComponentLocation();
+			//FVector posB = bodyB->GetComponentLocation();
+			//float rSquared = FMath::Square(FVector::Distance(posA, posB));
+			//
+			//UE_LOG(LogTemp, Log, TEXT("R2 %f"), rSquared);
+			//
+			//float masses = (bodyA->mass * bodyB->mass);
+			//
+			//UE_LOG(LogTemp, Log, TEXT("m1m2 %f"), masses);
+			//
+			//float magnitude = masses / rSquared;;
+			//float t = timescale * GetWorld()->DeltaTimeSeconds;
+			//
+			//bodyA->ApplyForce(magnitude, (posB - posA).GetSafeNormal(), t);
+			//bodyB->ApplyForce(magnitude, (posA - posB).GetSafeNormal(), t);
+
+			bodyA->ApplyForceBetween(bodyB, timescale * GetWorld()->DeltaTimeSeconds);
+		}
 	}
 }
 
@@ -68,5 +98,6 @@ void ASolarSystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	SimulateGravity();
 }
 

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/PointLightComponent.h"
 #include "GameFramework/Actor.h"
+#include "CelestialBody.h"
 #include "Star.generated.h"
 
 UCLASS()
@@ -23,7 +24,9 @@ public:
 	UStaticMeshComponent* mesh;
 	UMaterialInstanceDynamic* materialInstance;
 	UPointLightComponent* light;
+	UPROPERTY(VisibleAnywhere)
 	FLinearColor color;
+	UCelestialBody* body;
 
 	float age = 0;
 	float temp = 50000;

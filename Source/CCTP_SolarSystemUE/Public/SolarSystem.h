@@ -62,6 +62,12 @@ public:
 	UMaterialInterface* starMaterial;
 
 	UPROPERTY(EditAnywhere)
+	float massScale = 10000;
+
+	UPROPERTY(EditAnywhere)
+	float gravitationalConstant = 10000;
+
+	UPROPERTY(EditAnywhere)
 	float timescale = 1.f;
 
 	TArray<UCelestialBody*> celestialBodies;
@@ -72,8 +78,10 @@ protected:
 	void PlacePlanets();
 	void BuildPlanets();
 	void SimulateGravity();
+	void SetInitialVelocities();
 
 	USceneComponent* root;
+	bool setup = false;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

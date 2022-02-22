@@ -13,7 +13,7 @@ APlanet::APlanet()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	surfaceSettings = CreateDefaultSubobject<USurfaceSettings>(TEXT("Surface Settings"));
-	gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
+	//gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
 	body = CreateDefaultSubobject<UCelestialBody>(TEXT("Body"));
 
 	RootComponent = body;
@@ -54,12 +54,11 @@ void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, float wat
 
 	for (int i=0; i<6; i++)
 	{
-		terrain[i]->Init(surfaceSettings, directions[i], terrainMaterial, waterMaterial);
+		terrain[i]->Init(surfaceSettings, RootComponent, directions[i], terrainMaterial, waterMaterial);
 	}
 	SetupGravity();
 	active = true;
-
-	body->mass = radius * radius * radius;
+	body->SetMassOverrideInKg(GetFName(), radius, true);
 }
 
 // Called every frame
@@ -76,11 +75,14 @@ void APlanet::Tick(float DeltaTime)
 		timer = 0;
 	}
 	timer += GetWorld()->GetDeltaSeconds();
+
+	vel = body->GetComponentVelocity();
+	speed = vel.Size();
 }
 
 void APlanet::SetupGravity()
 {
-	gravityField->radius = surfaceSettings->radius * gravityOffset;// *(surfaceSettings->radius * gravityOffset);
+	//gravityField->radius = surfaceSettings->radius * gravityOffset;// *(surfaceSettings->radius * gravityOffset);
 }
 
 void APlanet::GenerateTerrain()

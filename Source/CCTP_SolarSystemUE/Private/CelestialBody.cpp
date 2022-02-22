@@ -10,7 +10,13 @@ UCelestialBody::UCelestialBody()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	// ...mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surface"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
+	SetStaticMesh(SphereMeshAsset.Object);
+
+	SetSimulatePhysics(true);
+	SetCollisionProfileName(TEXT("PhysicsActor"));
+	SetLinearDamping(0);
 }
 
 
@@ -27,33 +33,32 @@ void UCelestialBody::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UCelestialBody::ApplyForce(float force, FVector direction, float timestep)
+void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody, float g, float massScale)
 {
-	//a = f/m (f = ma)
-	//s = vt + .5a(t^2)
-	//s = distance, v = initial velocity on frame, t = timestep
+	FVector posA = GetComponentLocation();
+	FVector posB = otherBody->GetComponentLocation();
+	float rSquared = FMath::Square(FVector::Distance(posA, posB));
+	float massA = CalculateMass(GetFName()) / massScale;
+	float massB = otherBody->CalculateMass(otherBody->GetFName()) / massScale;
+	float magnitude = massA * massB / rSquared;;
 
-	float acceleration = force / mass;
+	FVector forceA = (posB - posA).GetSafeNormal() * magnitude * g;
 
-	float distance = velocity.Size() * timestep + (0.5f * acceleration * timestep * timestep);
-
-	UE_LOG(LogTemp, Log, TEXT("FORCE %f"), force);
-	FVector loc = distance * direction + GetComponentLocation();
-	velocity += force * direction;
-	SetWorldLocation(loc);
+	AddForce(forceA, GetFName(), false);
 }
 
-void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody, float timestep)
+void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody, float g, float massScale)
 {
-	FVector dir = (otherBody->GetComponentLocation() - GetComponentLocation()).GetSafeNormal();
-	float rSquared = FMath::Square(FVector::Distance(GetComponentLocation(), otherBody->GetComponentLocation()));
+	float otherMass = otherBody->CalculateMass(otherBody->GetFName()) / massScale;
+	FVector posA = GetComponentLocation();
+	FVector posB = otherBody->GetComponentLocation();
+	float r = FVector::Distance(posA, posB);
 
-	UE_LOG(LogTemp, Log, TEXT("R2 %f"), rSquared);
+	FVector aToB = posB - posA;
+	FRotator aim = (posB - posA).Rotation();
+	SetWorldRotation(aim);
 
-	float acceleration = otherBody->mass / rSquared;
-	float distance = velocity.Size() * timestep + (0.5f * acceleration * timestep * timestep);
-	FVector loc = distance * dir + GetComponentLocation();
-	//velocity += mass * acceleration * dir;
-	SetWorldLocation(loc);
+	FVector v = GetRightVector() * FMath::Sqrt((g * otherMass) / r);
+	SetAllPhysicsLinearVelocity(v, true);
 }
 

@@ -26,6 +26,7 @@ public:
 	UPointLightComponent* light;
 	UPROPERTY(VisibleAnywhere)
 	FLinearColor color;
+	UPROPERTY(EditAnywhere)
 	UCelestialBody* body;
 
 	float age = 0;

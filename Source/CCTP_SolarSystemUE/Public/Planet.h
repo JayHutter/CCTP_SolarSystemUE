@@ -31,19 +31,25 @@ public:
 	UPROPERTY(EditAnywhere, Instanced)
 	USurfaceSettings* surfaceSettings;
 
+	UPROPERTY(EditAnywhere)
 	UCelestialBody* body;
 
 	UPROPERTY(VisibleAnywhere, Instanced)
 	TArray<UTerrain*> terrain;
 
-	UPROPERTY(EditAnywhere)
-	UGravitationalField* gravityField;
+	//UPROPERTY(EditAnywhere)
+	//UGravitationalField* gravityField;
 
 	UPROPERTY(EditAnywhere)
 	float gravityOffset = 50;
 
 	void ManageLOD();
 	int detailLevel = -1;
+
+	UPROPERTY(VisibleAnywhere)
+	FVector vel;
+	UPROPERTY(VisibleAnywhere)
+	float speed;
 
 	void Init(float radius, TArray<FNoiseSettings> noiseSettings, float waterHeight, FVector generationSeed, int chunkResolution=8, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 

@@ -28,7 +28,7 @@ void AStar::Init(float radius, UMaterialInterface* material)
 	mesh->SetWorldScale3D(FVector(radius, radius, radius));
 	mesh->SetMaterial(0, material);
 	materialInstance = UMaterialInstanceDynamic::Create(mesh->GetMaterial(0), this);
-	body->mass = radius * radius * radius * radius;
+	body->SetMassOverrideInKg(GetFName(), radius * radius, true);
 }
 
 // Called every frame

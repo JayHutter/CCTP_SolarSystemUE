@@ -25,6 +25,7 @@ void ASolarSystem::BeginPlay()
 
 	PlacePlanets();
 	BuildPlanets();
+	SetInitialVelocities();
 }
 
 void ASolarSystem::PlacePlanets()
@@ -72,32 +73,29 @@ void ASolarSystem::SimulateGravity()
 			if (bodyA == bodyB)
 				continue;
 
-			//FVector posA = bodyA->GetComponentLocation();
-			//FVector posB = bodyB->GetComponentLocation();
-			//float rSquared = FMath::Square(FVector::Distance(posA, posB));
-			//
-			//UE_LOG(LogTemp, Log, TEXT("R2 %f"), rSquared);
-			//
-			//float masses = (bodyA->mass * bodyB->mass);
-			//
-			//UE_LOG(LogTemp, Log, TEXT("m1m2 %f"), masses);
-			//
-			//float magnitude = masses / rSquared;;
-			//float t = timescale * GetWorld()->DeltaTimeSeconds;
-			//
-			//bodyA->ApplyForce(magnitude, (posB - posA).GetSafeNormal(), t);
-			//bodyB->ApplyForce(magnitude, (posA - posB).GetSafeNormal(), t);
+			bodyA->ApplyForceBetween(bodyB, gravitationalConstant, massScale);
+		}
+	}
+}
 
-			bodyA->ApplyForceBetween(bodyB, timescale * GetWorld()->DeltaTimeSeconds);
+void ASolarSystem::SetInitialVelocities()
+{
+	for (auto bodyA : celestialBodies)
+	{
+		for (auto bodyB : celestialBodies)
+		{
+			if (bodyA == bodyB)
+				continue;
+	
+			bodyA->SetInitialVelocity(bodyB, gravitationalConstant, massScale);
 		}
 	}
 }
 
 // Called every frame
-void ASolarSystem::Tick(float DeltaTime)
+void ASolarSystem::Tick(float DeltaTime)	
 {
 	Super::Tick(DeltaTime);
-
 	SimulateGravity();
 }
 

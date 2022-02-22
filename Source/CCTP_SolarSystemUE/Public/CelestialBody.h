@@ -8,7 +8,7 @@
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class CCTP_SOLARSYSTEMUE_API UCelestialBody : public USceneComponent
+class CCTP_SOLARSYSTEMUE_API UCelestialBody : public UStaticMeshComponent
 {
 	GENERATED_BODY()
 
@@ -23,10 +23,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void ApplyForce(float force, FVector direction, float timestep=1);
-	void ApplyForceBetween(UCelestialBody* otherBody, float timestep = 1);
-
-	FVector velocity;
-	UPROPERTY(EditAnywhere)
-	float mass;
+	void ApplyForceBetween(UCelestialBody* otherBody, float g, float massScale = 1);
+	void SetInitialVelocity(UCelestialBody* otherBody, float g, float massScale = 1);
 };

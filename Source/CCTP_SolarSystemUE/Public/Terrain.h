@@ -65,7 +65,7 @@ class CCTP_SOLARSYSTEMUE_API UTerrain : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UTerrain();
-	void Init(USurfaceSettings* _settings, FVector _localUp = FVector(0.f, 0.f, 1.f), UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
+	void Init(USurfaceSettings* _settings, USceneComponent* rootComponent, FVector _localUp = FVector(0.f, 0.f, 1.f), UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 
 protected:
 	// Called when the game starts

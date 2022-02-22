@@ -12,7 +12,7 @@ UTerrain::UTerrain()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
+void UTerrain::Init(USurfaceSettings* _settings, USceneComponent* rootComponent, FVector _localUp, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
 {
 	//resolution = _resolution;
 	localUp = _localUp;
@@ -25,8 +25,11 @@ void UTerrain::Init(USurfaceSettings* _settings, FVector _localUp, UMaterialInte
 
 	faceLocation = localUp * surfaceSettings->radius;
 	planetSeed = GetOwner()->GetActorLocation();
-	mesh->SetWorldLocation(GetOwner()->GetActorLocation());
-	water->SetWorldLocation(GetOwner()->GetActorLocation());
+
+	mesh->AttachToComponent(rootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	mesh->SetRelativeLocation(FVector::ZeroVector);
+	water->AttachToComponent(rootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	water->SetRelativeLocation(FVector::ZeroVector);
 
 	if (terrainMaterial)
 		mesh->SetMaterial(0, terrainMaterial);

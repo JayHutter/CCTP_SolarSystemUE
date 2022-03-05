@@ -3,6 +3,8 @@
 
 #include "SolarSystem.h"
 
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values
 ASolarSystem::ASolarSystem()
 {
@@ -10,6 +12,9 @@ ASolarSystem::ASolarSystem()
 	PrimaryActorTick.bCanEverTick = true;
 	root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = root;
+	planetSpawnAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Root"));
+	planetSpawner = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Point"));
+	planetSpawner->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 }
 
 // Called when the game starts or when spawned
@@ -24,8 +29,9 @@ void ASolarSystem::BeginPlay()
 		waterHeight = 0;
 
 	PlacePlanets();
-	BuildPlanets();
 	SetInitialVelocities();
+	if (planetDistance < 10)
+		planetDistance = 10;
 }
 
 void ASolarSystem::PlacePlanets()
@@ -37,30 +43,41 @@ void ASolarSystem::PlacePlanets()
 	star = GetWorld()->SpawnActor<AStar>(starTemplate, location, rotator, spawnParams);
 	star->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 
-	for (int i = 0; i < planetCount; i++)
-	{
-		location += FVector(maxRadius * 200, FMath::RandRange(-maxRadius * 20, maxRadius * 20), FMath::RandRange(-maxRadius * 10, maxRadius * 10));
-		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(planetTemplate, location, rotator, spawnParams);
-		planets.Add(newPlanet);
-		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
-	}
-}
-
-void ASolarSystem::BuildPlanets()
-{
 	star->Init(maxRadius, starMaterial);
 	celestialBodies.Add(star->body);
 
-	for (int i=0; i<planets.Num(); i++)
+	for (int i = 0; i < planetCount; i++)
 	{
 		float offset = i * seed;
-		FVector terrainSeed = FVector(offset, offset, offset) + GetActorLocation();
+		FVector planetSeed =  GetActorLocation() + FVector(offset, offset, offset);
 
-		float radius = ((FMath::PerlinNoise3D(terrainSeed) + 1) * 0.5f) * maxRadius;
+		planetSpawner->SetWorldLocation(FVector(maxRadius * planetDistance, 0, 0) +
+			planetSpawner->GetComponentLocation());
+
+		float rotation = FMath::PerlinNoise3D(planetSeed / (seed*3.f)) * 360.f;
+		UE_LOG(LogTemp, Log, TEXT("ROT %f"), rotation);
+
+		//AddActorLocalRotation(FRotator(0, rotation, 0));
+		planetSpawnAnchor->AddLocalRotation(FRotator(0, rotation, 0));
+
+		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(planetTemplate, planetSpawner->GetComponentLocation(), rotator, spawnParams);
+		planets.Add(newPlanet);
+		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+
+		float radius = ((FMath::PerlinNoise3D(planetSeed / (seed * 3.f)) + 1) * 0.5f) * maxRadius;
 		int resolution = FMath::Pow(2, planetChunkResolution);
 
-		planets[i]->Init(maxRadius, noiseSettings, waterHeight, terrainSeed, resolution, planetMaterial, waterMaterial);
-		celestialBodies.Add(planets[i]->body);
+		//Needs to be pseudo-random rather than patterned like this
+		int noiseId = i % availableNoiseSettings.Num();
+
+		newPlanet->Init(radius, availableNoiseSettings[noiseId].noiseSettings, waterHeight, planetSeed, resolution, planetMaterial, waterMaterial);
+		celestialBodies.Add(newPlanet->body);
+
+		//Satellites currently fall off - need to look into
+		//location += FVector(maxRadius*2.f, 0, 0);
+		//APlanet* testSat = GetWorld()->SpawnActor<APlanet>(planetTemplate, location, rotator, spawnParams);
+		//satellites.Add(testSat);
+		//testSat->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	}
 }
 

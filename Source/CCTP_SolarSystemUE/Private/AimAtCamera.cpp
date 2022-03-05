@@ -32,6 +32,6 @@ void UAimAtCamera::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	FRotator aim = (playerCamera->GetCameraLocation() - parent->GetActorLocation()).Rotation();
-	playerCamera->SetActorRotation(aim, ETeleportType::None);
+	parent->SetActorRotation(aim, ETeleportType::None);
 }
 

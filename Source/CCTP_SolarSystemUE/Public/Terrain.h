@@ -27,16 +27,16 @@ public:
 	TArray<Chunk*> children;
 	Chunk* parent;
 	FVector location;
-	FVector planetLocation;
 	float scale;
 	int detailLevel;
 	FVector localUp;
 	FVector axisA;
 	FVector axisB;
 	USurfaceSettings* surfaceSettings;
+	AActor* parentPlanet;
 
-	Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel,
-		FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, FString id="0");
+	Chunk(Chunk* parent, FVector location, float scale, int detailLevel, FVector localUp, 
+		FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, AActor* parentPlanet, FString id="0");
 
 	bool GenerateChildren(FVector cameraLocation);
 	TArray<Chunk*> GetVisibleChildren();

@@ -6,6 +6,7 @@
 #include "Components/PointLightComponent.h"
 #include "GameFramework/Actor.h"
 #include "CelestialBody.h"
+#include "Engine/DirectionalLight.h"
 #include "Star.generated.h"
 
 UCLASS()
@@ -23,11 +24,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	UStaticMeshComponent* mesh;
 	UMaterialInstanceDynamic* materialInstance;
-	UPointLightComponent* light;
+	
 	UPROPERTY(VisibleAnywhere)
 	FLinearColor color;
 	UPROPERTY(EditAnywhere)
 	UCelestialBody* body;
+
+	//ADirectionalLight* lightSource;
+	UPROPERTY(VisibleAnywhere)
+	UDirectionalLightComponent* lightSource;
+	UPROPERTY(VisibleAnywhere)
+	UPointLightComponent* light;
+	APlayerCameraManager* playerCamera;
 
 	float age = 0;
 	float temp = 50000;

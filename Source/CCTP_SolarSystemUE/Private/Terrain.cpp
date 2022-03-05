@@ -37,8 +37,8 @@ void UTerrain::Init(USurfaceSettings* _settings, USceneComponent* rootComponent,
 	if (waterMaterial)
 		water->SetMaterial(0, waterMaterial);
 
-	rootChunk = new Chunk(nullptr, localUp, GetOwner()->GetActorLocation(), 1.f,
-		-1, localUp, axisA, axisB, surfaceSettings, "0");
+	rootChunk = new Chunk(nullptr, localUp, 1.f, -1, 
+		localUp, axisA, axisB, surfaceSettings, GetOwner(), "0");
 }
 /*
 void UTerrain::BuildMesh(int resolution)
@@ -224,13 +224,12 @@ FVector UTerrain::CalculateNormal(FVector vertexPos)
 
 //Chunk Class
 
-Chunk::Chunk(Chunk* parent, FVector location, FVector planetLocation, float scale, int detailLevel,
-	FVector localUp, FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, FString id)
+Chunk::Chunk(Chunk* parent, FVector location, float scale, int detailLevel, FVector localUp,
+	FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, AActor* parentPlanet, FString id)
 {
 	children.SetNum(0);
 	this->parent = parent;
 	this->location = location;
-	this->planetLocation = planetLocation;
 	this->scale = scale;
 	this->detailLevel = detailLevel;
 	this->localUp = localUp;
@@ -238,6 +237,7 @@ Chunk::Chunk(Chunk* parent, FVector location, FVector planetLocation, float scal
 	this->axisB = axisB;
 	this->surfaceSettings = surfaceSettings;
 	this->id = id;
+	this->parentPlanet = parentPlanet;
 }
 
 bool Chunk::GenerateChildren(FVector cameraLocation)
@@ -255,7 +255,7 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("ID: %s"), *id);
 		//UE_LOG(LogTemp, Log, TEXT("LOD: %i"), detailLevel);
-		FVector surfaceLocation = (location * surfaceSettings->radius) + planetLocation;
+		FVector surfaceLocation = (location * surfaceSettings->radius) + parentPlanet->GetActorLocation();
 		//UE_LOG(LogTemp, Log, TEXT("Location: %f,%f,%f"), surfaceLocation.X, surfaceLocation.Y, surfaceLocation.Z);
 		float distance = FVector::Distance(surfaceLocation, cameraLocation);
 		//UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
@@ -267,20 +267,20 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 				children.SetNum(4);
 				TArray<Chunk*> newChunks;
 				children[0] = new Chunk(this,
-					location + axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id +"0");
+					location + axisA * scale / 2.f + axisB * scale / 2.f, scale / 2.f, 
+					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, id +"0");
 
 				children[1] = new Chunk(this,
-					location + axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "1");
+					location + axisA * scale / 2.f - axisB * scale / 2.f, scale / 2.f, 
+					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, id + "1");
 
 				children[2] = new Chunk(this,
-					location - axisA * scale / 2.f + axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "2");
+					location - axisA * scale / 2.f + axisB * scale / 2.f, scale / 2.f, 
+					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, id + "2");
 
 				children[3] = new Chunk(this,
-					location - axisA * scale / 2.f - axisB * scale / 2.f, planetLocation,
-					scale / 2.f, detailLevel + 1, localUp, axisA, axisB, surfaceSettings, id + "3");
+					location - axisA * scale / 2.f - axisB * scale / 2.f, scale / 2.f, 
+					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, + "3");
 
 				modified = true;
 			}
@@ -340,7 +340,7 @@ FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 			FVector pointOnUnitSphere = UTerrain::CubeToSphere(pointOnUnitCube);
 
 			float elevation = 0;
-			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius + planetLocation, surfaceSettings);
+			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius, surfaceSettings);
 			FVector vertex = pointOnUnitSphere * surfaceSettings->radius * (1 + elevation);
 
 			data.vertices.Add(vertex);

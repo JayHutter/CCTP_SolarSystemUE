@@ -9,6 +9,15 @@
 #include "SurfaceSettings.h"
 #include "SolarSystem.generated.h"
 
+USTRUCT()
+struct FPlanetSettings
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	TArray<FNoiseSettings> noiseSettings;
+};
+
 UCLASS()
 class CCTP_SOLARSYSTEMUE_API ASolarSystem : public AActor
 {
@@ -33,12 +42,18 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	TArray<APlanet*> planets;
 
+	UPROPERTY(VisibleAnywhere)
+	TArray<APlanet*> satellites;
+
 	UPROPERTY(EditAnywhere)
 	int planetCount = 1;
 	UPROPERTY(EditAnywhere)
 	float miniumRadius = 10000.f;
 	UPROPERTY(EditAnywhere)
 	float maxRadius = 20000.f;
+
+	UPROPERTY(EditAnywhere)
+	float planetDistance = 500.f;
 
 	UPROPERTY(EditAnywhere)
 	int planetChunkResolution = 8;
@@ -51,6 +66,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TArray<FNoiseSettings> noiseSettings;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FPlanetSettings> availableNoiseSettings;
 
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* planetMaterial;
@@ -71,12 +89,16 @@ public:
 	float timescale = 1.f;
 
 	TArray<UCelestialBody*> celestialBodies;
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* planetSpawnAnchor;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* planetSpawner;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void PlacePlanets();
-	void BuildPlanets();
 	void SimulateGravity();
 	void SetInitialVelocities();
 

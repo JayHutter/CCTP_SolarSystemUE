@@ -10,7 +10,7 @@
 #include "SolarSystem.generated.h"
 
 USTRUCT()
-struct FPlanetSettings
+struct FOldSettings
 {
 	GENERATED_BODY()
 
@@ -68,7 +68,7 @@ public:
 	TArray<FNoiseSettings> noiseSettings;
 
 	UPROPERTY(EditAnywhere)
-	TArray<FPlanetSettings> availableNoiseSettings;
+	TArray<FPlanetSettings> planetSettings;
 
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* planetMaterial;

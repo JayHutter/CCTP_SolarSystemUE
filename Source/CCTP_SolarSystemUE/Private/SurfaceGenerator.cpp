@@ -3,7 +3,7 @@
 
 #include "SurfaceGenerator.h"
 
-float SurfaceGenerator::ApplyNoise(FVector vertex, USurfaceSettings* settings)
+float SurfaceGenerator::ApplyNoise(FVector vertex, FPlanetSettings* settings)
 {
 	float noise = 0;
 

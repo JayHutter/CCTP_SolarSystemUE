@@ -64,13 +64,14 @@ void ASolarSystem::PlacePlanets()
 		planets.Add(newPlanet);
 		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 
-		float radius = ((FMath::PerlinNoise3D(planetSeed / (seed * 3.f)) + 1) * 0.5f) * maxRadius;
-		int resolution = FMath::Pow(2, planetChunkResolution);
-
 		//Needs to be pseudo-random rather than patterned like this
-		int noiseId = i % availableNoiseSettings.Num();
+		int noiseId = i % planetSettings.Num();
 
-		newPlanet->Init(radius, availableNoiseSettings[noiseId].noiseSettings, waterHeight, planetSeed, resolution, planetMaterial, waterMaterial);
+		planetSettings[noiseId].radius = ((FMath::PerlinNoise3D(planetSeed / (seed * 3.f)) + 1) * 0.5f) * maxRadius;
+		planetSettings[noiseId].chunkResolution = FMath::Pow(2, planetChunkResolution);
+		planetSettings[noiseId].seed = planetSeed;
+
+		newPlanet->Init(planetSettings[noiseId], planetMaterial, waterMaterial);
 		celestialBodies.Add(newPlanet->body);
 
 		//Satellites currently fall off - need to look into

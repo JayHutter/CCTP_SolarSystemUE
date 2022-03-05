@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "ProceduralMeshComponent.h"
 #include "SurfaceGenerator.h"
+#include "SurfaceSettings.h"
 #include "Terrain.generated.h"
 
 USTRUCT()
@@ -32,11 +33,11 @@ public:
 	FVector localUp;
 	FVector axisA;
 	FVector axisB;
-	USurfaceSettings* surfaceSettings;
+	FPlanetSettings* planetSettings;
 	AActor* parentPlanet;
 
-	Chunk(Chunk* parent, FVector location, float scale, int detailLevel, FVector localUp, 
-		FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, AActor* parentPlanet, FString id="0");
+	Chunk(Chunk* parent, FVector location, float scale, int detailLevel, FVector upVector, 
+		FVector axisA, FVector axisB, FPlanetSettings* planetSettings, AActor* parentPlanet, FString id="0");
 
 	bool GenerateChildren(FVector cameraLocation);
 	TArray<Chunk*> GetVisibleChildren();
@@ -65,7 +66,7 @@ class CCTP_SOLARSYSTEMUE_API UTerrain : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UTerrain();
-	void Init(USurfaceSettings* _settings, USceneComponent* rootComponent, FVector _localUp = FVector(0.f, 0.f, 1.f), UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
+	void Init(FPlanetSettings* settings, USceneComponent* rootComponent, FVector localUp = FVector(0.f, 0.f, 1.f), UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 
 protected:
 	// Called when the game starts
@@ -102,7 +103,7 @@ private:
 	FVector planetSeed;
 	FVector faceLocation;
 
-	USurfaceSettings* surfaceSettings;
+	FPlanetSettings* planetSettings;
 
 	int currentResolution;
 	bool currentActive = false;

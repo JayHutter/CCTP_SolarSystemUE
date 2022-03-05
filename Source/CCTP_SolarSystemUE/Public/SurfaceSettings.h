@@ -32,3 +32,24 @@ public:
 	UPROPERTY(EditAnywhere)
 	FVector seed;
 };
+
+USTRUCT()
+struct FPlanetSettings
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	float radius = 500.f;
+
+	UPROPERTY(EditAnywhere)
+	int chunkResolution = 8;
+
+	UPROPERTY(EditAnywhere)
+	float waterHeight = 0.5f;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FNoiseSettings> noiseSettings;
+
+	UPROPERTY(EditAnywhere)
+	FVector seed;
+};

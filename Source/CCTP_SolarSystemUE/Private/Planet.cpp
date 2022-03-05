@@ -12,7 +12,6 @@ APlanet::APlanet()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	surfaceSettings = CreateDefaultSubobject<USurfaceSettings>(TEXT("Surface Settings"));
 	//gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
 	body = CreateDefaultSubobject<UCelestialBody>(TEXT("Body"));
 
@@ -37,13 +36,9 @@ void APlanet::BeginPlay()
 	Super::BeginPlay();
 }
 
-void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, float waterHeight, FVector generationSeed, int chunkResolution, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
+void APlanet::Init(FPlanetSettings settings, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
 {
-	surfaceSettings->radius = radius;
-	surfaceSettings->seed = generationSeed;
-	surfaceSettings->noiseSettings = noiseSettings;
-	surfaceSettings->chunkResolution = chunkResolution;
-	surfaceSettings->waterHeight = waterHeight;
+	planetSettings = settings;
 
 	if (UWorld* World = GetWorld())
 		playerCamera = World->GetFirstPlayerController()->PlayerCameraManager;
@@ -54,11 +49,11 @@ void APlanet::Init(float radius, TArray<FNoiseSettings> noiseSettings, float wat
 
 	for (int i=0; i<6; i++)
 	{
-		terrain[i]->Init(surfaceSettings, RootComponent, directions[i], terrainMaterial, waterMaterial);
+		terrain[i]->Init(&planetSettings, RootComponent, directions[i], terrainMaterial, waterMaterial);
 	}
 	SetupGravity();
 	active = true;
-	body->SetMassOverrideInKg(GetFName(), radius, true);
+	body->SetMassOverrideInKg(GetFName(), planetSettings.radius, true);
 }
 
 // Called every frame

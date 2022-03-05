@@ -12,7 +12,7 @@
 class CCTP_SOLARSYSTEMUE_API SurfaceGenerator
 {
 public:
-	static float ApplyNoise(FVector vertex, USurfaceSettings* settings);
+	static float ApplyNoise(FVector vertex, FPlanetSettings* settings);
 
 	static float SimpleNoise(FVector coord, FSimpleNoise settings);
 	static float RigidNoise(FVector coord, FRigidNoise settings);

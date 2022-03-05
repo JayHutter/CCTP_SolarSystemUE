@@ -22,14 +22,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//UPROPERTY(EditAnywhere)
-	//bool basicPlanet;
-
-	//UPROPERTY(EditAnywhere)
-	//TArray<FNoiseSettings> noiseSettings;
-
-	UPROPERTY(EditAnywhere, Instanced)
-	USurfaceSettings* surfaceSettings;
+	UPROPERTY(EditAnywhere)
+	FPlanetSettings planetSettings;
 
 	UPROPERTY(EditAnywhere)
 	UCelestialBody* body;
@@ -51,7 +45,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	float speed;
 
-	void Init(float radius, TArray<FNoiseSettings> noiseSettings, float waterHeight, FVector generationSeed, int chunkResolution=8, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
+	void Init(FPlanetSettings settings, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 
 protected:
 	// Called when the game starts or when spawned

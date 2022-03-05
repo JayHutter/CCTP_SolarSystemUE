@@ -12,18 +12,16 @@ UTerrain::UTerrain()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UTerrain::Init(USurfaceSettings* _settings, USceneComponent* rootComponent, FVector _localUp, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
+void UTerrain::Init(FPlanetSettings* settings, USceneComponent* rootComponent, FVector upVector, UMaterialInterface* terrainMaterial, UMaterialInterface* waterMaterial)
 {
 	//resolution = _resolution;
-	localUp = _localUp;
-
-	if (_settings)
-		surfaceSettings = _settings;
+	localUp = upVector;
+	this->planetSettings = settings;
 
 	axisA = FVector(localUp.Z, localUp.X, localUp.Y);
 	axisB = FVector::CrossProduct(localUp, axisA);
 
-	faceLocation = localUp * surfaceSettings->radius;
+	faceLocation = localUp * planetSettings->radius;
 	planetSeed = GetOwner()->GetActorLocation();
 
 	mesh->AttachToComponent(rootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
@@ -38,7 +36,7 @@ void UTerrain::Init(USurfaceSettings* _settings, USceneComponent* rootComponent,
 		water->SetMaterial(0, waterMaterial);
 
 	rootChunk = new Chunk(nullptr, localUp, 1.f, -1, 
-		localUp, axisA, axisB, surfaceSettings, GetOwner(), "0");
+		localUp, axisA, axisB, planetSettings, GetOwner(), "0");
 }
 /*
 void UTerrain::BuildMesh(int resolution)
@@ -225,7 +223,7 @@ FVector UTerrain::CalculateNormal(FVector vertexPos)
 //Chunk Class
 
 Chunk::Chunk(Chunk* parent, FVector location, float scale, int detailLevel, FVector localUp,
-	FVector axisA, FVector axisB, USurfaceSettings* surfaceSettings, AActor* parentPlanet, FString id)
+	FVector axisA, FVector axisB, FPlanetSettings* planetSettings, AActor* parentPlanet, FString id)
 {
 	children.SetNum(0);
 	this->parent = parent;
@@ -235,7 +233,7 @@ Chunk::Chunk(Chunk* parent, FVector location, float scale, int detailLevel, FVec
 	this->localUp = localUp;
 	this->axisA = axisA;
 	this->axisB = axisB;
-	this->surfaceSettings = surfaceSettings;
+	this->planetSettings = planetSettings;
 	this->id = id;
 	this->parentPlanet = parentPlanet;
 }
@@ -255,11 +253,11 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("ID: %s"), *id);
 		//UE_LOG(LogTemp, Log, TEXT("LOD: %i"), detailLevel);
-		FVector surfaceLocation = (location * surfaceSettings->radius) + parentPlanet->GetActorLocation();
+		FVector surfaceLocation = (location * planetSettings->radius) + parentPlanet->GetActorLocation();
 		//UE_LOG(LogTemp, Log, TEXT("Location: %f,%f,%f"), surfaceLocation.X, surfaceLocation.Y, surfaceLocation.Z);
 		float distance = FVector::Distance(surfaceLocation, cameraLocation);
 		//UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
-		if (distance <= detailDistances[detailLevel] * surfaceSettings->radius)
+		if (distance <= detailDistances[detailLevel] * planetSettings->radius)
 		{
 			if (children.Num() < 4)
 			{
@@ -268,19 +266,19 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 				TArray<Chunk*> newChunks;
 				children[0] = new Chunk(this,
 					location + axisA * scale / 2.f + axisB * scale / 2.f, scale / 2.f, 
-					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, id +"0");
+					detailLevel + 1, localUp, axisA, axisB, planetSettings, parentPlanet, id +"0");
 
 				children[1] = new Chunk(this,
 					location + axisA * scale / 2.f - axisB * scale / 2.f, scale / 2.f, 
-					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, id + "1");
+					detailLevel + 1, localUp, axisA, axisB, planetSettings, parentPlanet, id + "1");
 
 				children[2] = new Chunk(this,
 					location - axisA * scale / 2.f + axisB * scale / 2.f, scale / 2.f, 
-					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, id + "2");
+					detailLevel + 1, localUp, axisA, axisB, planetSettings, parentPlanet, id + "2");
 
 				children[3] = new Chunk(this,
 					location - axisA * scale / 2.f - axisB * scale / 2.f, scale / 2.f, 
-					detailLevel + 1, localUp, axisA, axisB, surfaceSettings, parentPlanet, + "3");
+					detailLevel + 1, localUp, axisA, axisB, planetSettings, parentPlanet, + "3");
 
 				modified = true;
 			}
@@ -324,7 +322,7 @@ TArray<Chunk*> Chunk::GetVisibleChildren()
 
 FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 {
-	const int resolution = surfaceSettings->chunkResolution;
+	const int resolution = planetSettings->chunkResolution;
 	FTriangleData data;
 	int tri = 0;
 	FProcMeshTangent tangent = FProcMeshTangent(0.f, 1.f, 0.f);
@@ -340,8 +338,8 @@ FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 			FVector pointOnUnitSphere = UTerrain::CubeToSphere(pointOnUnitCube);
 
 			float elevation = 0;
-			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius, surfaceSettings);
-			FVector vertex = pointOnUnitSphere * surfaceSettings->radius * (1 + elevation);
+			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * planetSettings->radius, planetSettings);
+			FVector vertex = pointOnUnitSphere * planetSettings->radius * (1 + elevation);
 
 			data.vertices.Add(vertex);
 			data.normals.Add(UTerrain::CalculateNormal(vertex));
@@ -368,7 +366,7 @@ FTriangleData Chunk::CalcuateTriangles(int triangleOffset)
 
 void Chunk::CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleData& waterData)
 {
-	const int resolution = surfaceSettings->chunkResolution;
+	const int resolution = planetSettings->chunkResolution;
 	int tri = 0;
 	int triOffset = terrainData.vertices.Num();
 	FProcMeshTangent tangent = FProcMeshTangent(0.f, 1.f, 0.f);
@@ -383,9 +381,9 @@ void Chunk::CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleDa
 			FVector pointOnUnitSphere = UTerrain::CubeToSphere(pointOnUnitCube);
 
 			float elevation = 0;
-			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * surfaceSettings->radius, surfaceSettings);
-			FVector vertex = pointOnUnitSphere * surfaceSettings->radius * (1 + elevation);
-			FVector waterVertex = pointOnUnitSphere * surfaceSettings->radius * surfaceSettings->waterHeight;//(1 + surfaceSettings->noiseSettings[0].simpleNoiseSettings.strength * 0.3f);
+			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * planetSettings->radius, planetSettings);
+			FVector vertex = pointOnUnitSphere * planetSettings->radius * (1 + elevation);
+			FVector waterVertex = pointOnUnitSphere * planetSettings->radius * planetSettings->waterHeight;//(1 + surfaceSettings->noiseSettings[0].simpleNoiseSettings.strength * 0.3f);
 
 			CreateTriangle(terrainData, vertex, percent, resolution, triOffset, x, y, elevation);
 			CreateTriangle(waterData, waterVertex, percent, resolution, triOffset, x, y);

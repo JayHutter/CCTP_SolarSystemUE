@@ -62,12 +62,6 @@ public:
 	float seed = 1000.f;
 
 	UPROPERTY(EditAnywhere)
-	float waterHeight=0.5f;
-
-	UPROPERTY(EditAnywhere)
-	TArray<FNoiseSettings> noiseSettings;
-
-	UPROPERTY(EditAnywhere)
 	TArray<FPlanetSettings> planetSettings;
 
 	UPROPERTY(EditAnywhere)

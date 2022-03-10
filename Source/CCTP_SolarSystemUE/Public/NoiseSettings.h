@@ -66,6 +66,9 @@ struct FNoiseSettings
 	bool enabled = true;
 
 	UPROPERTY(EditAnywhere)
+	bool isMasked = false;
+
+	UPROPERTY(EditAnywhere)
 	TEnumAsByte<NoiseType> noiseType = NoiseType::SIMPLE;
 
 	UPROPERTY(EditAnywhere)

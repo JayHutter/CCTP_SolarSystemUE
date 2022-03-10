@@ -25,9 +25,6 @@ void ASolarSystem::BeginPlay()
 	if (planetChunkResolution <= 1)
 		planetChunkResolution = 2;
 
-	if (waterHeight < 0)
-		waterHeight = 0;
-
 	PlacePlanets();
 	SetInitialVelocities();
 	if (planetDistance < 10)
@@ -55,7 +52,6 @@ void ASolarSystem::PlacePlanets()
 			planetSpawner->GetComponentLocation());
 
 		float rotation = FMath::PerlinNoise3D(planetSeed / (seed*3.f)) * 360.f;
-		UE_LOG(LogTemp, Log, TEXT("ROT %f"), rotation);
 
 		//AddActorLocalRotation(FRotator(0, rotation, 0));
 		planetSpawnAnchor->AddLocalRotation(FRotator(0, rotation, 0));

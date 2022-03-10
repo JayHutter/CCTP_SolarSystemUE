@@ -44,6 +44,7 @@ public:
 	FTriangleData CalcuateTriangles(int triangleOffset);
 	void CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleData& waterData);
 	void CreateTriangle(FTriangleData& triangleData, FVector vertexPos, FVector2D percent, int resolution, int triOffset, int x, int y, float elavation = 1);
+	void SaveMinMaxValues(float elevation);
 
 	TMap<int, float> detailDistances =
 	{
@@ -83,6 +84,7 @@ public:
 	FVector GetFaceLocation() const { return faceLocation; }
 	static FVector CubeToSphere(FVector vertexPos);
 	static FVector CalculateNormal(FVector vertexPos);
+	void SetColors();
 
 private:
 	int terrainResolution;
@@ -114,6 +116,7 @@ private:
 
 	FTriangleData terrainData;
 	FTriangleData waterData;
+	UMaterialInstanceDynamic* dynamicTerrainMat;
 };
 
 

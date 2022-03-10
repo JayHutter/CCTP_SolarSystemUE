@@ -6,7 +6,7 @@
 float SurfaceGenerator::ApplyNoise(FVector vertex, FPlanetSettings* settings)
 {
 	float noise = 0;
-
+	float layerOne = 1;
 	if (settings->noiseSettings.Num() == 0)
 		return 1;
 
@@ -19,15 +19,20 @@ float SurfaceGenerator::ApplyNoise(FVector vertex, FPlanetSettings* settings)
 		if (!noiseSettings.enabled)
 			continue;
 
+		float mask = (settings->noiseSettings[i].isMasked) ? layerOne : 1;
+
 		switch (settings->noiseSettings[i].noiseType)
 		{
 			case NoiseType::SIMPLE:
-				noise += SimpleNoise(vertex, noiseSettings.simpleNoiseSettings);
+				noise += SimpleNoise(vertex, noiseSettings.simpleNoiseSettings) * mask;
 				break;
 			case NoiseType::RIGID:
-				noise += RigidNoise(vertex, noiseSettings.rigidNoiseSettings);
+				noise += RigidNoise(vertex, noiseSettings.rigidNoiseSettings) * mask;
 				break;
 		}
+
+		if (i == 0)
+			layerOne = noise;
 	}
 
 	return noise;
@@ -61,7 +66,7 @@ float SurfaceGenerator::RigidNoise(FVector coord, FRigidNoise settings)
 
 	for (int i = 0; i < settings.noiseLayers; i++)
 	{
-		float v = 1 - FMath::PerlinNoise3D(coord * frequency * settings.frequencyMultiplier);
+		float v = 1 - FMath::Abs(FMath::PerlinNoise3D(coord * frequency * settings.frequencyMultiplier));
 
 		v *= v;
 		v *= weight;

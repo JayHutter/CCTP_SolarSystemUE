@@ -30,13 +30,20 @@ void UTerrain::Init(FPlanetSettings* settings, USceneComponent* rootComponent, F
 	water->SetRelativeLocation(FVector::ZeroVector);
 
 	if (terrainMaterial)
-		mesh->SetMaterial(0, terrainMaterial);
+	{
+		//mesh->SetMaterial(0, terrainMaterial);
+		dynamicTerrainMat = UMaterialInstanceDynamic::Create(terrainMaterial, mesh);
+		mesh->SetMaterial(0, dynamicTerrainMat);
+	}
 
 	if (waterMaterial)
 		water->SetMaterial(0, waterMaterial);
 
 	rootChunk = new Chunk(nullptr, localUp, 1.f, -1, 
 		localUp, axisA, axisB, planetSettings, GetOwner(), "0");
+
+	UMaterialInstanceDynamic* dynMat = UMaterialInstanceDynamic::Create(terrainMaterial, mesh);
+	mesh->SetMaterial(0, dynMat);
 }
 /*
 void UTerrain::BuildMesh(int resolution)
@@ -124,6 +131,7 @@ void UTerrain::ConstructQuadTree()
 
 		mesh->CreateMeshSection(0, terrainData.vertices, terrainData.triangles, terrainData.normals, terrainData.uvs, terrainData.vertexColors, terrainData.tangents, true);
 		water->CreateMeshSection(0, waterData.vertices, waterData.triangles, waterData.normals, waterData.uvs, waterData.vertexColors, waterData.tangents, false);
+		SetColors();
 		ResetData(); //Empty arrays to save mem
 	}
 	//UE_LOG(LogTemp, Log, TEXT("TIME END: %fs"), GetWorld()->TimeSeconds);
@@ -218,6 +226,12 @@ FVector UTerrain::CalculateNormal(FVector vertexPos)
 	return dir.GetSafeNormal();
 }
 
+void UTerrain::SetColors()
+{
+	dynamicTerrainMat->SetVectorParameterValue("Terrain Data", FLinearColor(planetSettings->minHeight, planetSettings->maxHeight, planetSettings->radius, 0));
+	dynamicTerrainMat->SetTextureParameterValue("Biome Sample", planetSettings->terrainGradient);
+	mesh->SetMaterial(0, dynamicTerrainMat);
+}
 
 
 //Chunk Class
@@ -380,13 +394,17 @@ void Chunk::CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleDa
 				((percent.Y - 0.5f) * 2 * axisA + (percent.X - 0.5f) * 2 * axisB) * scale;
 			FVector pointOnUnitSphere = UTerrain::CubeToSphere(pointOnUnitCube);
 
-			float elevation = 0;
-			elevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * planetSettings->radius, planetSettings);
-			FVector vertex = pointOnUnitSphere * planetSettings->radius * (1 + elevation);
+			float unitElevation = 0;
+			unitElevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * planetSettings->radius, planetSettings);
+			float elevation = planetSettings->radius * (1 + unitElevation);
+			SaveMinMaxValues(elevation);
+
+			FVector vertex = pointOnUnitSphere * elevation;
 			FVector waterVertex = pointOnUnitSphere * planetSettings->radius * planetSettings->waterHeight;//(1 + surfaceSettings->noiseSettings[0].simpleNoiseSettings.strength * 0.3f);
 
-			CreateTriangle(terrainData, vertex, percent, resolution, triOffset, x, y, elevation);
+			CreateTriangle(terrainData, vertex, percent, resolution, triOffset, x, y, unitElevation);
 			CreateTriangle(waterData, waterVertex, percent, resolution, triOffset, x, y);
+			
 			if (x != resolution - 1 && y != resolution - 1)
 				tri += 6;
 		}
@@ -414,4 +432,13 @@ void Chunk::CreateTriangle(FTriangleData& triangleData, FVector vertexPos, FVect
 		triangleData.triangles.Add(i + 1);
 		triangleData.triangles.Add(i + resolution + 1);
 	}
+}
+
+void Chunk::SaveMinMaxValues(float elevation)
+{
+	if (planetSettings->minHeight > elevation || planetSettings->minHeight == -1)
+		planetSettings->minHeight = elevation;
+
+	if (planetSettings->maxHeight < elevation || planetSettings->maxHeight == -1)
+		planetSettings->maxHeight = elevation;
 }

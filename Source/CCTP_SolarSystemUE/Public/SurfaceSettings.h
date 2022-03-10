@@ -50,6 +50,21 @@ struct FPlanetSettings
 	UPROPERTY(EditAnywhere)
 	TArray<FNoiseSettings> noiseSettings;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(VisibleAnywhere)
 	FVector seed;
+
+	UPROPERTY(EditAnywhere)
+	UTexture* terrainGradient;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* surfaceMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* waterMaterial;
+
+	UPROPERTY(VisibleAnywhere)
+	float minHeight =-1;
+
+	UPROPERTY(VisibleAnywhere)
+	float maxHeight =-1;
 };

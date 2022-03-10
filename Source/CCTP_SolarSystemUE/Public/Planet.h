@@ -52,6 +52,7 @@ protected:
 	virtual void BeginPlay() override;
 	void SetupGravity();
 	void GenerateTerrain();
+	void GenerateColours();
 
 	bool active = false;
 	int currentRes = 16;

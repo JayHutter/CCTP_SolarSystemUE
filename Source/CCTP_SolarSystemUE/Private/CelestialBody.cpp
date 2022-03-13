@@ -2,6 +2,7 @@
 
 
 #include "CelestialBody.h"
+#include "UniverseSettings.h"
 
 // Sets default values for this component's properties
 UCelestialBody::UCelestialBody()
@@ -17,6 +18,7 @@ UCelestialBody::UCelestialBody()
 	SetSimulatePhysics(true);
 	SetCollisionProfileName(TEXT("PhysicsActor"));
 	SetLinearDamping(0);
+	
 }
 
 
@@ -24,6 +26,10 @@ UCelestialBody::UCelestialBody()
 void UCelestialBody::BeginPlay()
 {
 	Super::BeginPlay();
+
+	auto settings = Cast<AUniverseSettings>(GetWorld()->GetWorldSettings());
+	g = settings->gravitationalConstant;
+	massScale = settings->massScale;
 }
 
 
@@ -33,7 +39,7 @@ void UCelestialBody::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody, float g, float massScale)
+void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody)
 {
 	FVector posA = GetComponentLocation();
 	FVector posB = otherBody->GetComponentLocation();
@@ -47,7 +53,7 @@ void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody, float g, float
 	AddForce(forceA, GetFName(), false);
 }
 
-void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody, float g, float massScale)
+void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody)
 {
 	float otherMass = otherBody->CalculateMass(otherBody->GetFName()) / massScale;
 	FVector posA = GetComponentLocation();
@@ -61,4 +67,3 @@ void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody, float g, floa
 	FVector v = GetRightVector() * FMath::Sqrt((g * otherMass) / r);
 	SetAllPhysicsLinearVelocity(v, true);
 }
-

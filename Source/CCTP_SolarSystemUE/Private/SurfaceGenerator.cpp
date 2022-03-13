@@ -20,14 +20,15 @@ float SurfaceGenerator::ApplyNoise(FVector vertex, FPlanetSettings* settings)
 			continue;
 
 		float mask = (settings->noiseSettings[i].isMasked) ? layerOne : 1;
+		float scale = (settings->noiseSettings[i].scaleWithRadius) ? settings->noiseScale : 1;
 
 		switch (settings->noiseSettings[i].noiseType)
 		{
 			case NoiseType::SIMPLE:
-				noise += SimpleNoise(vertex, noiseSettings.simpleNoiseSettings) * mask;
+				noise += SimpleNoise(vertex, noiseSettings.simpleNoiseSettings, scale) * mask;
 				break;
 			case NoiseType::RIGID:
-				noise += RigidNoise(vertex, noiseSettings.rigidNoiseSettings) * mask;
+				noise += RigidNoise(vertex, noiseSettings.rigidNoiseSettings, scale) * mask;
 				break;
 		}
 
@@ -38,11 +39,11 @@ float SurfaceGenerator::ApplyNoise(FVector vertex, FPlanetSettings* settings)
 	return noise;
 }
 
-float SurfaceGenerator::SimpleNoise(FVector coord, FSimpleNoise settings)
+float SurfaceGenerator::SimpleNoise(FVector coord, FSimpleNoise settings, float scale)
 {
 	float noise = 0;
 	float amplitude = settings.amplitude;
-	float frequency = settings.baseRoughness;
+	float frequency = settings.baseRoughness + scale;
 
 	for (int i = 0; i < settings.noiseLayers; i++)
 	{
@@ -57,12 +58,12 @@ float SurfaceGenerator::SimpleNoise(FVector coord, FSimpleNoise settings)
 	return noise * settings.strength;
 }
 
-float SurfaceGenerator::RigidNoise(FVector coord, FRigidNoise settings)
+float SurfaceGenerator::RigidNoise(FVector coord, FRigidNoise settings, float scale)
 {
 	float noise = 0;
 	float amplitude = settings.amplitude;
 	float weight = 1;
-	float frequency = settings.baseRoughness;
+	float frequency = settings.baseRoughness + scale;
 
 	for (int i = 0; i < settings.noiseLayers; i++)
 	{

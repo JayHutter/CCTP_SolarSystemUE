@@ -7,7 +7,7 @@
 #include "NoiseSettings.h"
 #include "SurfaceSettings.generated.h"
 
-
+//Old component version of the planets settings - not in use
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CCTP_SOLARSYSTEMUE_API USurfaceSettings : public UObject
 {
@@ -67,4 +67,7 @@ struct FPlanetSettings
 
 	UPROPERTY(VisibleAnywhere)
 	float maxHeight =-1;
+
+	UPROPERTY(VisibleAnywhere)
+	float noiseScale = 1;
 };

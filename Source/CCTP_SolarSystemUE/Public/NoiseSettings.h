@@ -69,6 +69,9 @@ struct FNoiseSettings
 	bool isMasked = false;
 
 	UPROPERTY(EditAnywhere)
+	bool scaleWithRadius = false;
+
+	UPROPERTY(EditAnywhere)
 	TEnumAsByte<NoiseType> noiseType = NoiseType::SIMPLE;
 
 	UPROPERTY(EditAnywhere)

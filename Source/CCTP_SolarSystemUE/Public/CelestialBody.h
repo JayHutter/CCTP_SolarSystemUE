@@ -20,9 +20,11 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	float g;
+	float massScale;
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void ApplyForceBetween(UCelestialBody* otherBody, float g, float massScale = 1);
-	void SetInitialVelocity(UCelestialBody* otherBody, float g, float massScale = 1);
+	void ApplyForceBetween(UCelestialBody* otherBody);
+	void SetInitialVelocity(UCelestialBody* otherBody);
 };

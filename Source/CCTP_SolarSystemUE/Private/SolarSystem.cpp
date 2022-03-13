@@ -4,6 +4,7 @@
 #include "SolarSystem.h"
 
 #include "Kismet/GameplayStatics.h"
+#include "UniverseSettings.h"
 
 // Sets default values
 ASolarSystem::ASolarSystem()
@@ -22,13 +23,8 @@ void ASolarSystem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (planetChunkResolution <= 1)
-		planetChunkResolution = 2;
-
 	PlacePlanets();
 	SetInitialVelocities();
-	if (planetDistance < 10)
-		planetDistance = 10;
 }
 
 void ASolarSystem::PlacePlanets()
@@ -37,37 +33,42 @@ void ASolarSystem::PlacePlanets()
 	const FRotator rotator;
 	const FActorSpawnParameters spawnParams;
 
-	star = GetWorld()->SpawnActor<AStar>(starTemplate, location, rotator, spawnParams);
+	const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
+
+	star = GetWorld()->SpawnActor<AStar>(universeSettings->starTemplate, location, rotator, spawnParams);
 	star->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 
-	star->Init(maxRadius, starMaterial);
+	star->Init(universeSettings->maxRadius, universeSettings->starMaterial);
 	celestialBodies.Add(star->body);
 
 	for (int i = 0; i < planetCount; i++)
 	{
-		float offset = i * seed;
-		FVector planetSeed =  GetActorLocation() + FVector(offset, offset, offset);
+		float universeSeed = universeSettings->seed;
+		float offset = i * universeSeed;
+		FVector planetSeed =  solarSystemSeed + FVector(offset, offset, offset);
 
-		planetSpawner->SetWorldLocation(FVector(maxRadius * planetDistance, 0, 0) +
+		planetSpawner->SetWorldLocation(FVector(universeSettings->maxRadius * universeSettings->planetDistance, 0, 0) +
 			planetSpawner->GetComponentLocation());
 
-		float rotation = FMath::PerlinNoise3D(planetSeed / (seed*3.f)) * 360.f;
+		float rotation = FMath::PerlinNoise3D(planetSeed / (universeSeed *3.f)) * 360.f;
 
 		//AddActorLocalRotation(FRotator(0, rotation, 0));
 		planetSpawnAnchor->AddLocalRotation(FRotator(0, rotation, 0));
 
-		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(planetTemplate, planetSpawner->GetComponentLocation(), rotator, spawnParams);
+		APlanet* newPlanet = GetWorld()->SpawnActor<APlanet>(universeSettings->planetTemplate, planetSpawner->GetComponentLocation(), rotator, spawnParams);
 		planets.Add(newPlanet);
 		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 
 		//Needs to be pseudo-random rather than patterned like this
-		int noiseId = i % planetSettings.Num();
+		int noiseId = i % universeSettings->planetSettings.Num();
+		FPlanetSettings newPlanetSettings = universeSettings->planetSettings[noiseId];
 
-		planetSettings[noiseId].radius = ((FMath::PerlinNoise3D(planetSeed / (seed * 3.f)) + 1) * 0.5f) * maxRadius;
-		planetSettings[noiseId].chunkResolution = FMath::Pow(2, planetChunkResolution);
-		planetSettings[noiseId].seed = planetSeed;
+		newPlanetSettings.radius = ((FMath::PerlinNoise3D(planetSeed / (universeSeed * 3.f)) + 1) * 0.5f) * universeSettings->maxRadius;
+		newPlanetSettings.chunkResolution = FMath::Pow(2, universeSettings->planetChunkResolution);
+		newPlanetSettings.seed = planetSeed;
+		newPlanetSettings.noiseScale = newPlanetSettings.radius / universeSettings->miniumRadius;
 
-		newPlanet->Init(planetSettings[noiseId], planetMaterial, waterMaterial);
+		newPlanet->Init(newPlanetSettings, newPlanetSettings.surfaceMaterial, universeSettings->waterMaterial);
 		celestialBodies.Add(newPlanet->body);
 
 		//Satellites currently fall off - need to look into
@@ -87,7 +88,7 @@ void ASolarSystem::SimulateGravity()
 			if (bodyA == bodyB)
 				continue;
 
-			bodyA->ApplyForceBetween(bodyB, gravitationalConstant, massScale);
+			bodyA->ApplyForceBetween(bodyB);
 		}
 	}
 }
@@ -101,7 +102,7 @@ void ASolarSystem::SetInitialVelocities()
 			if (bodyA == bodyB)
 				continue;
 	
-			bodyA->SetInitialVelocity(bodyB, gravitationalConstant, massScale);
+			bodyA->SetInitialVelocity(bodyB);
 		}
 	}
 }

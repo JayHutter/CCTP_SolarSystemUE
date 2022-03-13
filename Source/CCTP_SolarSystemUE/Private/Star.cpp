@@ -17,8 +17,9 @@ AStar::AStar()
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surface"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	mesh->SetStaticMesh(SphereMeshAsset.Object);
-
-	mesh->SetWorldLocation(GetActorLocation());
+	//mesh->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	mesh->SetRelativeLocation(FVector::ZeroVector);
+	mesh->SetGenerateOverlapEvents(false);
 
 	light = CreateDefaultSubobject<UPointLightComponent>(TEXT("Light"));
 	light->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
@@ -33,7 +34,7 @@ void AStar::Init(float radius, UMaterialInterface* material)
 	mesh->SetWorldScale3D(FVector(radius, radius, radius));
 	mesh->SetMaterial(0, material);
 	materialInstance = UMaterialInstanceDynamic::Create(mesh->GetMaterial(0), this);
-	body->SetMassOverrideInKg(GetFName(), radius * radius, true);
+	body->SetMassOverrideInKg(GetFName(), radius * radius * radius, true);
 
 	if (UWorld* World = GetWorld())
 		playerCamera = World->GetFirstPlayerController()->PlayerCameraManager;
@@ -59,4 +60,5 @@ void AStar::Tick(float DeltaTime)
 
 	FRotator aim = (playerCamera->GetCameraLocation() - GetActorLocation()).Rotation();
 	lightSource->SetWorldRotation(aim);
+	//lightSource->SetLightColor(color);
 }

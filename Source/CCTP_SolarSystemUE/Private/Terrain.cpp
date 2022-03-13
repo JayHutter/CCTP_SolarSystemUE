@@ -267,7 +267,10 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("ID: %s"), *id);
 		//UE_LOG(LogTemp, Log, TEXT("LOD: %i"), detailLevel);
-		FVector surfaceLocation = (location * planetSettings->radius) + parentPlanet->GetActorLocation();
+		FVector surfaceLocation = (location);
+		FRotator rotation = parentPlanet->GetActorRotation();
+		surfaceLocation = rotation.RotateVector(surfaceLocation);
+		surfaceLocation = surfaceLocation * planetSettings->radius + parentPlanet->GetActorLocation();
 		//UE_LOG(LogTemp, Log, TEXT("Location: %f,%f,%f"), surfaceLocation.X, surfaceLocation.Y, surfaceLocation.Z);
 		float distance = FVector::Distance(surfaceLocation, cameraLocation);
 		//UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
@@ -395,7 +398,7 @@ void Chunk::CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleDa
 			FVector pointOnUnitSphere = UTerrain::CubeToSphere(pointOnUnitCube);
 
 			float unitElevation = 0;
-			unitElevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere * planetSettings->radius, planetSettings);
+			unitElevation = SurfaceGenerator::ApplyNoise(pointOnUnitSphere, planetSettings);
 			float elevation = planetSettings->radius * (1 + unitElevation);
 			SaveMinMaxValues(elevation);
 
@@ -403,7 +406,8 @@ void Chunk::CalculateTerrainAndWaterTris(FTriangleData& terrainData, FTriangleDa
 			FVector waterVertex = pointOnUnitSphere * planetSettings->radius * planetSettings->waterHeight;//(1 + surfaceSettings->noiseSettings[0].simpleNoiseSettings.strength * 0.3f);
 
 			CreateTriangle(terrainData, vertex, percent, resolution, triOffset, x, y, unitElevation);
-			CreateTriangle(waterData, waterVertex, percent, resolution, triOffset, x, y);
+			if (planetSettings->waterHeight > 1)
+				CreateTriangle(waterData, waterVertex, percent, resolution, triOffset, x, y);
 			
 			if (x != resolution - 1 && y != resolution - 1)
 				tri += 6;

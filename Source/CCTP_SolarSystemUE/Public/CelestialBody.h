@@ -15,7 +15,8 @@ class CCTP_SOLARSYSTEMUE_API UCelestialBody : public UStaticMeshComponent
 public:	
 	// Sets default values for this component's properties
 	UCelestialBody();
-
+	UPROPERTY(VisibleAnywhere)
+	float scale = 1.f;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

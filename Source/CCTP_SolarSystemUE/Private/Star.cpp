@@ -17,7 +17,7 @@ AStar::AStar()
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surface"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	mesh->SetStaticMesh(SphereMeshAsset.Object);
-	//mesh->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	mesh->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	mesh->SetRelativeLocation(FVector::ZeroVector);
 	mesh->SetGenerateOverlapEvents(false);
 

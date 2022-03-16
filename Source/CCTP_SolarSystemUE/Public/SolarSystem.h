@@ -26,16 +26,6 @@ class CCTP_SOLARSYSTEMUE_API ASolarSystem : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ASolarSystem();
-
-	//UPROPERTY(EditAnywhere)
-	//TSubclassOf<APlanet>  planetTemplate;
-	//
-	//UPROPERTY(EditAnywhere)
-	//TSubclassOf<AStar> starTemplate;
-	//
-	//UPROPERTY(EditAnywhere)
-	//TSubclassOf<ASatellite> satelliteTemplate;
-	//
 	UPROPERTY(VisibleAnywhere)
 	AStar* star;
 	
@@ -49,41 +39,7 @@ public:
 	int planetCount = 1;
 
 	UPROPERTY(EditAnywhere)
-	FVector solarSystemSeed;
-	//UPROPERTY(EditAnywhere)
-	//float miniumRadius = 10000.f;
-	//UPROPERTY(EditAnywhere)
-	//float maxRadius = 20000.f;
-	//
-	//UPROPERTY(EditAnywhere)
-	//float planetDistance = 500.f;
-	//
-	//UPROPERTY(EditAnywhere)
-	//int planetChunkResolution = 8;
-	//
-	//UPROPERTY(EditAnywhere)
-	//float seed = 1000.f;
-	//
-	//UPROPERTY(EditAnywhere)
-	//TArray<FPlanetSettings> planetSettings;
-	//
-	//UPROPERTY(EditAnywhere)
-	//UMaterialInterface* planetMaterial;
-	//
-	//UPROPERTY(EditAnywhere)
-	//UMaterialInterface* waterMaterial;
-	//
-	//UPROPERTY(EditAnywhere)
-	//UMaterialInterface* starMaterial;
-	//
-	//UPROPERTY(EditAnywhere)
-	//float massScale = 10000;
-	//
-	//UPROPERTY(EditAnywhere)
-	//float gravitationalConstant = 10000;
-	//
-	//UPROPERTY(EditAnywhere)
-	//float timescale = 1.f;
+	int solarSystemSeed;
 
 	TArray<UCelestialBody*> celestialBodies;
 	UPROPERTY(VisibleAnywhere)
@@ -104,4 +60,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UCelestialBody* solarBody;
 };

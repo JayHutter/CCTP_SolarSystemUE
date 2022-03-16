@@ -34,6 +34,12 @@ public:
 	float seed = 123;
 
 	UPROPERTY(EditAnywhere)
+	int minPlanetCount = 3;
+
+	UPROPERTY(EditAnywhere)
+	int maxPlanetCount = 10;
+
+	UPROPERTY(EditAnywhere)
 	TArray<FPlanetSettings> planetSettings;
 
 	UPROPERTY(EditAnywhere)
@@ -50,9 +56,6 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	float gravitationalConstant = 10;
-
-	UPROPERTY(EditAnywhere)
-	float timescale = 1.f;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<APlanet>  planetTemplate;

@@ -12,6 +12,7 @@ ASolarSystem::ASolarSystem()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	solarBody = CreateDefaultSubobject<UCelestialBody>(TEXT("Solar System BodY"));
 	RootComponent = root;
 	planetSpawnAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Root"));
 	planetSpawner = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Point"));
@@ -22,21 +23,24 @@ ASolarSystem::ASolarSystem()
 void ASolarSystem::BeginPlay()
 {
 	Super::BeginPlay();
-
 	PlacePlanets();
 	SetInitialVelocities();
 }
 
 void ASolarSystem::PlacePlanets()
 {
+	const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
+
+	FMath::RandInit(solarSystemSeed);
+	planetCount = FMath::RandRange(universeSettings->minPlanetCount, universeSettings->maxPlanetCount);
+
 	FVector location = GetActorLocation();
 	const FRotator rotator;
 	const FActorSpawnParameters spawnParams;
 
-	const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
-
 	star = GetWorld()->SpawnActor<AStar>(universeSettings->starTemplate, location, rotator, spawnParams);
 	star->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	star->SetActorLocation(location);
 
 	star->Init(universeSettings->maxRadius, universeSettings->starMaterial);
 	celestialBodies.Add(star->body);
@@ -45,12 +49,16 @@ void ASolarSystem::PlacePlanets()
 	{
 		float universeSeed = universeSettings->seed;
 		float offset = i * universeSeed;
-		FVector planetSeed =  solarSystemSeed + FVector(offset, offset, offset);
+		//FVector planetSeed =  solarSystemSeed + FVector(offset, offset, offset);
 
 		planetSpawner->SetWorldLocation(FVector(universeSettings->maxRadius * universeSettings->planetDistance, 0, 0) +
 			planetSpawner->GetComponentLocation());
 
-		float rotation = FMath::PerlinNoise3D(planetSeed / (universeSeed *3.f)) * 360.f;
+		//float rotation = FMath::PerlinNoise3D(planetSeed / (universeSeed *3.f)) * 360.f;
+
+		float planetSeed = solarSystemSeed + offset;
+		FMath::RandInit(planetSeed);
+		float rotation = FMath::RandRange(0.f, 360.f);
 
 		//AddActorLocalRotation(FRotator(0, rotation, 0));
 		planetSpawnAnchor->AddLocalRotation(FRotator(0, rotation, 0));
@@ -63,9 +71,10 @@ void ASolarSystem::PlacePlanets()
 		int noiseId = i % universeSettings->planetSettings.Num();
 		FPlanetSettings newPlanetSettings = universeSettings->planetSettings[noiseId];
 
-		newPlanetSettings.radius = ((FMath::PerlinNoise3D(planetSeed / (universeSeed * 3.f)) + 1) * 0.5f) * universeSettings->maxRadius;
+		//newPlanetSettings.radius = ((FMath::PerlinNoise3D(planetSeed / (universeSeed * 3.f)) + 1) * 0.5f) * universeSettings->maxRadius;
+		newPlanetSettings.radius = FMath::RandRange(universeSettings->miniumRadius, universeSettings->maxRadius);
 		newPlanetSettings.chunkResolution = FMath::Pow(2, universeSettings->planetChunkResolution);
-		newPlanetSettings.seed = planetSeed;
+		newPlanetSettings.seed = FVector(planetSeed, planetSeed, planetSeed);
 		newPlanetSettings.noiseScale = newPlanetSettings.radius / universeSettings->miniumRadius;
 
 		newPlanet->Init(newPlanetSettings, newPlanetSettings.surfaceMaterial, universeSettings->waterMaterial);
@@ -83,8 +92,12 @@ void ASolarSystem::SimulateGravity()
 {
 	for (auto bodyA : celestialBodies)
 	{
+		if (bodyA == celestialBodies[0])
+			continue;
+
 		for (auto bodyB : celestialBodies)
 		{
+
 			if (bodyA == bodyB)
 				continue;
 
@@ -97,6 +110,9 @@ void ASolarSystem::SetInitialVelocities()
 {
 	for (auto bodyA : celestialBodies)
 	{
+		if (bodyA == celestialBodies[0])
+			continue;
+
 		for (auto bodyB : celestialBodies)
 		{
 			if (bodyA == bodyB)

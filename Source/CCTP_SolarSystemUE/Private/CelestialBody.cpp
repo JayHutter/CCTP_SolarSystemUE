@@ -43,14 +43,18 @@ void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody)
 {
 	FVector posA = GetComponentLocation();
 	FVector posB = otherBody->GetComponentLocation();
-	float rSquared = FMath::Square(FVector::Distance(posA, posB));
+	float rSquared = FMath::Square(FVector::Distance(posA, posB) / scale);
 	float massA = CalculateMass(GetFName()) / massScale;
 	float massB = otherBody->CalculateMass(otherBody->GetFName()) / massScale;
+
+	if (rSquared == 0)
+		return;
+
 	float magnitude = massA * massB / rSquared;;
 
 	FVector forceA = (posB - posA).GetSafeNormal() * magnitude * g;
 
-	AddForce(forceA, GetFName(), false);
+	AddForce(forceA * scale, GetFName(), false);
 }
 
 void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody)
@@ -58,12 +62,15 @@ void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody)
 	float otherMass = otherBody->CalculateMass(otherBody->GetFName()) / massScale;
 	FVector posA = GetComponentLocation();
 	FVector posB = otherBody->GetComponentLocation();
-	float r = FVector::Distance(posA, posB);
+	float r = FVector::Distance(posA, posB) / scale;
 
 	FVector aToB = posB - posA;
 	FRotator aim = (posB - posA).Rotation();
 	SetWorldRotation(aim);
 
+	if (r == 0)
+		return;
+
 	FVector v = GetRightVector() * FMath::Sqrt((g * otherMass) / r);
-	SetAllPhysicsLinearVelocity(v, true);
+	SetAllPhysicsLinearVelocity(v * scale, true);
 }

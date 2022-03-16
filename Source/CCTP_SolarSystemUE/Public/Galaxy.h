@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "CelestialBody.h"
+#include "SolarSystem.h"
 #include "Galaxy.generated.h"
 
 UCLASS()
@@ -20,10 +21,13 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	FVector RandomStartPosition();
+	FVector RandomStartPosition(int i);
+	FVector RandomStartPosition(FVector seed);
 
 	void SimulateGravity();
 	void SetInitialVelocities();
 
+	void SetSystemScale();
 	void SimulateGravitySimple();
 	void SetInitialVelocitiesSimple();
 
@@ -42,5 +46,11 @@ public:
 	UPROPERTY(EditAnywhere)
 	float galaxyRadius = 100000.f;
 
+	UPROPERTY(EditAnywhere)
+	int galaxySeed;
+
+	UPROPERTY(VisibleAnywhere)
+	UCelestialBody* blackHole;
 	TArray<UCelestialBody*> bodies;
+	TArray<ASolarSystem*> systems;
 };

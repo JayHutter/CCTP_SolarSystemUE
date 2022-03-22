@@ -16,8 +16,13 @@ AGalaxy::AGalaxy()
 
 	blackHole->SetRelativeLocation(FVector::ZeroVector);
 	blackHole->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
-	blackHole->SetWorldScale3D(FVector(100, 100, 100));
+
+	galaxyScale = GetActorScale().Size();
+
+	const float blackHoleSize = 100.f;
+	blackHole->SetWorldScale3D(FVector(blackHoleSize, blackHoleSize, blackHoleSize));
 	FMath::RandInit(galaxySeed);
+
 	for (int i=0; i< galaxySize; i++)
 	{
 		UCelestialBody* newBody = CreateDefaultSubobject<UCelestialBody>(*FString("Solar System" + FString::FromInt(i)));
@@ -33,6 +38,21 @@ AGalaxy::AGalaxy()
 void AGalaxy::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
+	//const FRotator rotator;
+	//const FActorSpawnParameters spawnParams;
+	//
+	//FMath::RandInit(galaxySeed);
+	//for (int i=0; i<galaxySize; i++)
+	//{
+	//	AStar* newStar = GetWorld()->SpawnActor<AStar>(universeSettings->starTemplate, RandomStartPosition(), rotator, spawnParams);
+	//	newStar->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	//	newStar->Init(universeSettings->maxRadius, universeSettings->starMaterial);
+	//	bodies.Add(newStar->body);
+	//}
+
+
 	//float scale = RootComponent->GetRelativeScale3D().Size();
 	//blackHole->SetMassOverrideInKg(GetFName(), scale * scale * 1000, true);
 	blackHole->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->starMaterial);
@@ -66,7 +86,7 @@ FVector AGalaxy::RandomStartPosition(int i)
 	float r = galaxyRadius * FMath::Sqrt(FMath::RandRange(0.f, 1.f));
 	float theta = FMath::RandRange(0.f, 1.f) * 2.f * PI;
 
-	r += 1000;
+	r += minDistance;
 
 	float x = RootComponent->GetComponentLocation().X + r * FMath::Cos(theta);
 	float y = RootComponent->GetComponentLocation().Y + r * FMath::Sin(theta);
@@ -100,49 +120,62 @@ void AGalaxy::Tick(float DeltaTime)
 	SimulateGravitySimple();
 }
 
-void AGalaxy::SimulateGravity()
+void AGalaxy::LoadSolarSystem(int index)
 {
-	//auto bodyA = bodies[bodyAId];
-	//auto bodyB = bodies[bodyBId];
+	if (index > bodies.Num())
+		return;
 
-	auto bodyA = systems[bodyAId]->solarBody;
-	auto bodyB = systems[bodyBId]->solarBody;
+	if (loadedSolarSystem)
+		UnloadSolarSystem();
 
-	if (bodyA != bodyB)
-		bodyA->ApplyForceBetween(bodyB);
+	UE_LOG(LogTemp, Log, TEXT("Load Solar System %i"), index);
 
-	bodyBId++;
-	if (bodyBId >= bodies.Num())
-	{
-		bodyAId++;
-		bodyAId %= bodies.Num();
-		bodyBId = 0;
-	}
+	FActorSpawnParameters spawnParams;
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	const FRotator rotator;
+	const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
+
+	UCelestialBody* body = bodies[index];
+
+	ASolarSystem* newSystem = GetWorld()->SpawnActor<ASolarSystem>(universeSettings->solarSystemTemplate, body->GetComponentLocation(), rotator, spawnParams);
+	newSystem->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	newSystem->GenerateSolarSystem(galaxySeed + index);
+
+
+	loadedSolarSystem = newSystem;
+	loadedSystemId = index;
+
+	body->SetVisibility(false);
 }
 
-void AGalaxy::SetInitialVelocities()
+void AGalaxy::UnloadSolarSystem()
 {
-	for (auto bodyA : bodies)
-	{
-		for (auto bodyB : bodies)
-		{
-			if (bodyA == bodyB)
-				continue;
+	UE_LOG(LogTemp, Log, TEXT("Destroy System"));
 
-			bodyA->SetInitialVelocity(bodyB);
-		}
-	}
+	UCelestialBody* body = bodies[loadedSystemId];
+	body->SetVisibility(true);
+	loadedSystemId = -1;
+
+	bool destroy = loadedSolarSystem->Destroy();
+	loadedSolarSystem = nullptr;
+
+	if (destroy)
+		UE_LOG(LogTemp, Log, TEXT("Destroying"));
+}
+
+int AGalaxy::GetTotalSolarSystems()
+{
+	return bodies.Num();
 }
 
 void AGalaxy::SetSystemScale()
 {
-	float scale = GetActorScale().Size();
-	blackHole->scale = scale;
+	blackHole->scale = galaxyScale;
 	blackHole->SetMassOverrideInKg(GetFName(), 1000000000, true);
 	for (auto body : bodies)
 	{
 		body->SetMassOverrideInKg(GetFName(), 100, true);
-		body->scale = scale;
+		body->scale = galaxyScale;
 	}
 }
 

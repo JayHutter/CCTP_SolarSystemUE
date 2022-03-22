@@ -13,18 +13,30 @@ ASolarSystem::ASolarSystem()
 	PrimaryActorTick.bCanEverTick = true;
 	root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	solarBody = CreateDefaultSubobject<UCelestialBody>(TEXT("Solar System BodY"));
+	solarBody->SetVisibility(false);
 	RootComponent = root;
 	planetSpawnAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Root"));
 	planetSpawner = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Point"));
 	planetSpawner->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 }
 
+void ASolarSystem::GenerateSolarSystem(int seed)
+{
+	UE_LOG(LogTemp, Log, TEXT("Generating Solar Systems"));
+
+	if (seed >= 0)
+		solarSystemSeed = seed;
+
+	PlacePlanets();
+	SetInitialVelocities();
+}
+
 // Called when the game starts or when spawned
 void ASolarSystem::BeginPlay()
 {
 	Super::BeginPlay();
-	PlacePlanets();
-	SetInitialVelocities();
+	//if (generateAtStart)
+	//	GenerateSolarSystem();
 }
 
 void ASolarSystem::PlacePlanets()

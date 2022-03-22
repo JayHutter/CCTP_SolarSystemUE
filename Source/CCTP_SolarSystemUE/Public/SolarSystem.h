@@ -26,6 +26,9 @@ class CCTP_SOLARSYSTEMUE_API ASolarSystem : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ASolarSystem();
+
+	void GenerateSolarSystem(int seed = -1);
+
 	UPROPERTY(VisibleAnywhere)
 	AStar* star;
 	
@@ -57,6 +60,9 @@ protected:
 
 	USceneComponent* root;
 	bool setup = false;
+
+	UPROPERTY(EditAnywhere)
+	bool generateAtStart = false;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

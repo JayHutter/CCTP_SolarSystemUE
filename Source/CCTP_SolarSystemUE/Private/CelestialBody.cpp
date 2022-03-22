@@ -74,3 +74,11 @@ void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody)
 	FVector v = GetRightVector() * FMath::Sqrt((g * otherMass) / r);
 	SetAllPhysicsLinearVelocity(v * scale, true);
 }
+
+FVector UCelestialBody::TeleportTo(FVector startPos)
+{
+	FVector direction = startPos - GetComponentLocation();
+	direction.Normalize();
+
+	return GetComponentLocation() + direction * offsetDistance;
+}

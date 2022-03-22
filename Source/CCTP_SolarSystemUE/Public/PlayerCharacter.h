@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Universe.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS(config = Game)
@@ -35,12 +36,17 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	AUniverse* universe;
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
 	float moveSpeed = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
-	float speedIncrement = 100;
+	float speedIncrement = 1500;
+
+	float minSpeed = 1000;
+	float maxSpeed = 999999999999.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -72,6 +78,9 @@ public:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
+
+	void TeleportToObject();
+	void IsLookingAtObject();
 
 	FVector MoveDirection;
 

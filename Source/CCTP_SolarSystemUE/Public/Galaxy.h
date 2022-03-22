@@ -24,9 +24,6 @@ protected:
 	FVector RandomStartPosition(int i);
 	FVector RandomStartPosition(FVector seed);
 
-	void SimulateGravity();
-	void SetInitialVelocities();
-
 	void SetSystemScale();
 	void SimulateGravitySimple();
 	void SetInitialVelocitiesSimple();
@@ -40,6 +37,14 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable)
+	void LoadSolarSystem(int index);
+
+	void UnloadSolarSystem();
+
+	UFUNCTION(BlueprintCallable)
+	int GetTotalSolarSystems();
+
 	UPROPERTY(EditAnywhere)
 	int galaxySize = 3000;
 
@@ -47,10 +52,20 @@ public:
 	float galaxyRadius = 100000.f;
 
 	UPROPERTY(EditAnywhere)
+	float minDistance = 10000.f;
+
+	float galaxyScale = 10000000.f;
+
+	UPROPERTY(EditAnywhere)
 	int galaxySeed;
 
 	UPROPERTY(VisibleAnywhere)
 	UCelestialBody* blackHole;
 	TArray<UCelestialBody*> bodies;
-	TArray<ASolarSystem*> systems;
+	TArray<AStar*> stars;
+
+	int loadedSystemId = -1;
+
+	UPROPERTY(VisibleAnywhere)
+	ASolarSystem* loadedSolarSystem = nullptr;
 };

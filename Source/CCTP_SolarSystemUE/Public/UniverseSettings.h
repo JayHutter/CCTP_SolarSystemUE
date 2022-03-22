@@ -6,7 +6,9 @@
 #include "GameFramework/WorldSettings.h"
 #include "SurfaceSettings.h"
 #include "Planet.h"
+#include "SolarSystem.h"
 #include "Star.h"
+#include "Universe.h"
 #include "UniverseSettings.generated.h"
 
 /**
@@ -62,4 +64,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AStar> starTemplate;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ASolarSystem> solarSystemTemplate;
+
+	AUniverse* universe;
 };

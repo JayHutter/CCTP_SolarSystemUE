@@ -5,6 +5,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
+#include "UniverseSettings.h"
 #include "GameFramework/SpringArmComponent.h"
 
 // Sets default values
@@ -55,20 +56,38 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	Collider->AddForce(MoveDirection * moveSpeed, GetFName(), true);
-	FVector vel = Collider->GetPhysicsLinearVelocity();
+	if (!universe)
+	{
+		universe = Cast<AUniverseSettings>(GetWorldSettings())->universe;
+		//AttachToActor(universe, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	}
+	FVector location = GetActorLocation();
 
-	if (vel.Size() > 0)
-		MeshRoot->SetWorldRotation(vel.Rotation());
+	if (location.Size() > 10000)
+	{
+		universe->SetCentrePoint(location);
+		SetActorLocation(FVector::ZeroVector);
+	}
 	else
 	{
-		FRotator Rotator = MeshRoot->GetComponentRotation();
-		Rotator.Pitch = 0;
-		Rotator.Roll = 0;
+		Collider->AddForce(MoveDirection * moveSpeed, GetFName(), true);
+		FVector vel = Collider->GetPhysicsLinearVelocity();
 
-		MeshRoot->SetWorldRotation(Rotator);
+		if (vel.Size() > 0)
+			MeshRoot->SetWorldRotation(vel.Rotation());
+		else
+		{
+			FRotator Rotator = MeshRoot->GetComponentRotation();
+			Rotator.Pitch = 0;
+			Rotator.Roll = 0;
+
+			MeshRoot->SetWorldRotation(Rotator);
+		}
 	}
-	
+	//universe->UpdatePostion(GetActorLocation());
+
+
+	//IsLookingAtObject();
 }
 
 // Called to bind functionality to input
@@ -100,6 +119,40 @@ void APlayerCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+void APlayerCharacter::IsLookingAtObject()
+{
+	const FRotator Rotation = Controller->GetControlRotation();
+	const FVector Direction = FRotationMatrix(Rotation).GetUnitAxis(EAxis::X);
+
+	FHitResult outHit;
+	FVector startPoint = GetActorLocation() + Direction * 999999999999999999;
+	FVector endPoint = startPoint + Direction * 999999999999999999;
+	FCollisionQueryParams params;
+
+	params.AddIgnoredComponent(Collider);
+
+	//bool isHit = ActorLineTraceSingle(outHit, startPoint, endPoint, ECC_WorldDynamic, params);
+
+	bool isHit = GetWorld()->LineTraceSingleByObjectType(
+		outHit,
+		startPoint,
+		endPoint,
+		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
+		params);
+
+	if (isHit)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Hit Somthing %fm away"), outHit.Distance);
+
+		UCelestialBody* body = Cast<UCelestialBody>(outHit.GetComponent());
+
+		if (body)
+		{
+			UE_LOG(LogTemp, Log, TEXT("Hit Celestial Body"));
+		}
+	}
+}
+
 void APlayerCharacter::MoveForward(float Value)
 {
 	if ((Controller != nullptr))
@@ -123,9 +176,14 @@ void APlayerCharacter::MoveRight(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
-		if (moveSpeed <= 1)
-			moveSpeed = 1;
+		//if (moveSpeed <= 1)
+		//	moveSpeed = 1;
+		//
+		//moveSpeed += Value * speedIncrement;
 
-		moveSpeed += Value * speedIncrement;
+		if (Value > 0)
+			moveSpeed = maxSpeed;
+		else
+			moveSpeed = minSpeed;
 	}
 }

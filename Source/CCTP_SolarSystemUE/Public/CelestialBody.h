@@ -28,4 +28,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyForceBetween(UCelestialBody* otherBody);
 	void SetInitialVelocity(UCelestialBody* otherBody);
+
+	FVector TeleportTo(FVector startPos);
+
+	float offsetDistance = 1000;
 };

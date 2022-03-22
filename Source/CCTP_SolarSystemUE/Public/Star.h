@@ -33,8 +33,6 @@ public:
 	//ADirectionalLight* lightSource;
 	UPROPERTY(VisibleAnywhere)
 	UDirectionalLightComponent* lightSource;
-	UPROPERTY(VisibleAnywhere)
-	UPointLightComponent* light;
 	APlayerCameraManager* playerCamera;
 
 	float age = 0;

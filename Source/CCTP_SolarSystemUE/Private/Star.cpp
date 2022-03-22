@@ -21,12 +21,10 @@ AStar::AStar()
 	mesh->SetRelativeLocation(FVector::ZeroVector);
 	mesh->SetGenerateOverlapEvents(false);
 
-	light = CreateDefaultSubobject<UPointLightComponent>(TEXT("Light"));
-	light->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	color = FLinearColor(0, 0, 1);
 
-	lightSource = CreateDefaultSubobject<UDirectionalLightComponent>("Light Source");
-	lightSource->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	//lightSource = CreateDefaultSubobject<UDirectionalLightComponent>("Light Source");
+	//lightSource->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 }
 
 void AStar::Init(float radius, UMaterialInterface* material)
@@ -58,7 +56,7 @@ void AStar::Tick(float DeltaTime)
 		mesh->SetMaterial(0, materialInstance);
 	}
 
-	FRotator aim = (playerCamera->GetCameraLocation() - GetActorLocation()).Rotation();
-	lightSource->SetWorldRotation(aim);
+	//FRotator aim = (playerCamera->GetCameraLocation() - GetActorLocation()).Rotation();
+	//lightSource->SetWorldRotation(aim);
 	//lightSource->SetLightColor(color);
 }

@@ -40,6 +40,8 @@ void AGalaxy::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//Solution abandoned due
+	//Using objects instead of components lags the game
 	//const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
 	//const FRotator rotator;
 	//const FActorSpawnParameters spawnParams;
@@ -63,7 +65,7 @@ void AGalaxy::BeginPlay()
 	blackHole->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->starMaterial);
 	for (auto body : bodies)
 	{
-		body->Init(0.25f, 1);
+		body->Init(0.01f, 1);
 		body->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->starMaterial);
 	}
 
@@ -86,38 +88,6 @@ FVector AGalaxy::RandomStartPosition()
 	return FVector(x, y, z);
 }
 
-FVector AGalaxy::RandomStartPosition(int i)
-{
-	FMath::RandInit(galaxySeed + i);
-	float r = galaxyRadius * FMath::Sqrt(FMath::RandRange(0.f, 1.f));
-	float theta = FMath::RandRange(0.f, 1.f) * 2.f * PI;
-
-	r += minDistance;
-
-	float x = RootComponent->GetComponentLocation().X + r * FMath::Cos(theta);
-	float y = RootComponent->GetComponentLocation().Y + r * FMath::Sin(theta);
-	float z = RootComponent->GetComponentLocation().Z + r * FMath::Sin(theta);
-
-	return FVector(x, y, z);
-}
-
-FVector AGalaxy::RandomStartPosition(FVector seed)
-{
-	UE_LOG(LogTemp, Log, TEXT("Seed %f, %f, %f"), seed.X, seed.Y, seed.Z);
-
-	const float val = (FMath::PerlinNoise3D(seed) + 1) * .5f;
-	const float r = galaxyRadius * FMath::Sqrt(val);
-	const float theta = val * 2.f * PI;
-
-	float x = RootComponent->GetComponentLocation().X + r * FMath::Cos(theta);
-	float y = RootComponent->GetComponentLocation().Y + r * FMath::Sin(theta);
-	float z = RootComponent->GetComponentLocation().Z + r * FMath::Sin(theta);
-
-	UE_LOG(LogTemp, Log, TEXT("Pos %f, %f, %f"), x, y, z);
-
-	return FVector(x, y, z);
-}
-
 // Called every frame
 void AGalaxy::Tick(float DeltaTime)
 {
@@ -127,6 +97,7 @@ void AGalaxy::Tick(float DeltaTime)
 	UpdateSolarSystemLocation();
 }
 
+//Loads selected system and hides the celestial body 
 ASolarSystem* AGalaxy::LoadSolarSystem(int index)
 {
 	if (index > bodies.Num())
@@ -150,9 +121,8 @@ ASolarSystem* AGalaxy::LoadSolarSystem(int index)
 
 	loadedSolarSystem = newSystem;
 	loadedSystemBody = body;
-	//loadedSystemId = index;
-
-	//body->SetVisibility(false);
+	
+	body->SetVisibility(false);
 
 	return loadedSolarSystem;
 }

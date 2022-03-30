@@ -21,8 +21,6 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	FVector RandomStartPosition();
-	FVector RandomStartPosition(int i);
-	FVector RandomStartPosition(FVector seed);
 
 	void SetSystemScale();
 	void SimulateGravitySimple();
@@ -47,7 +45,7 @@ public:
 	int GetTotalSolarSystems();
 
 	UPROPERTY(EditAnywhere)
-	int galaxySize = 1;
+	int galaxySize = 3000;
 
 	UPROPERTY(EditAnywhere)
 	float galaxyRadius = 100000.f;

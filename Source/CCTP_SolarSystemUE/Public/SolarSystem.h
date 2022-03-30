@@ -68,4 +68,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UCelestialBody* solarBody;
+
+	UFUNCTION(BlueprintCallable)
+	void TeleportPlayerTo();
+
+	void DestroySystem();
 };

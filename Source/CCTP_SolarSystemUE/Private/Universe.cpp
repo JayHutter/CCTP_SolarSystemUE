@@ -35,12 +35,36 @@ void AUniverse::Tick(float DeltaTime)
 
 void AUniverse::UpdatePostion(FVector playerPosition)
 {
+	MoveAllGalaxies(playerPosition * -1.f);
 	SetActorLocation(playerPosition * -1.f);
 }
 
 void AUniverse::SetCentrePoint(FVector centrePoint)
 {
 	FVector newPos = GetActorLocation() - centrePoint;
+	MoveAllGalaxies(newPos);
 	SetActorLocation(newPos);
+}
+
+void AUniverse::SetUniversePosition(FVector newLocation)
+{
+	MoveAllGalaxies(newLocation);
+	SetActorLocation(newLocation);
+}
+
+void AUniverse::AddGalaxy(AGalaxy* galaxy)
+{
+	galaxies.Add(galaxy);
+}
+
+void AUniverse::MoveAllGalaxies(FVector newUniLoc)
+{
+	const FVector universeLoc = GetActorLocation();
+
+	for (auto galaxy : galaxies)
+	{
+		FVector relLoc = galaxy->GetActorLocation() - universeLoc;
+		galaxy->MoveGalaxy(newUniLoc + relLoc);
+	}
 }
 

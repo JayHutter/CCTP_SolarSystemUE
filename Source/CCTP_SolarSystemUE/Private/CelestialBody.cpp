@@ -14,9 +14,11 @@ UCelestialBody::UCelestialBody()
 	// ...mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surface"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	SetStaticMesh(SphereMeshAsset.Object);
-
+	
 	SetSimulatePhysics(true);
-	SetCollisionProfileName(TEXT("PhysicsActor"));
+	SetCollisionProfileName(TEXT("NoCollision"));
+	SetCollisionObjectType(ECollisionChannel::ECC_PhysicsBody);
+	SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	SetLinearDamping(0);
 	
 }
@@ -27,11 +29,24 @@ void UCelestialBody::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//auto settings = Cast<AUniverseSettings>(GetWorld()->GetWorldSettings());
+	//g = settings->gravitationalConstant;
+	//massScale = settings->massScale;
+}
+
+
+void UCelestialBody::Init(float gravityConstant, float massMultiplier)
+{
+	this->g = gravityConstant;
+	this->massScale = massMultiplier;
+}
+
+void UCelestialBody::Init()
+{
 	auto settings = Cast<AUniverseSettings>(GetWorld()->GetWorldSettings());
 	g = settings->gravitationalConstant;
 	massScale = settings->massScale;
 }
-
 
 // Called every frame
 void UCelestialBody::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

@@ -53,6 +53,7 @@ void APlanet::Init(FPlanetSettings settings, UMaterialInterface* terrainMaterial
 	}
 	SetupGravity();
 	active = true;
+	body->Init();
 	body->SetMassOverrideInKg(GetFName(), planetSettings.radius, true);
 }
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Galaxy.h"
 #include "GameFramework/Actor.h"
 #include "Universe.generated.h"
 
@@ -22,9 +23,15 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* sceneComponent;
 
+	TArray<AGalaxy*> galaxies;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void UpdatePostion(FVector playerPosition);
 	void SetCentrePoint(FVector centrePoint);
+	void SetUniversePosition(FVector newLocation);
+
+	void AddGalaxy(AGalaxy* galaxy);
+	void MoveAllGalaxies(FVector newUniLoc);
 };

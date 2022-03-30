@@ -16,14 +16,13 @@ ASolarSystem::ASolarSystem()
 	solarBody->SetVisibility(false);
 	RootComponent = root;
 	planetSpawnAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Root"));
+	planetSpawnAnchor->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
 	planetSpawner = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Point"));
 	planetSpawner->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 }
 
 void ASolarSystem::GenerateSolarSystem(int seed)
 {
-	UE_LOG(LogTemp, Log, TEXT("Generating Solar Systems"));
-
 	if (seed >= 0)
 		solarSystemSeed = seed;
 
@@ -41,6 +40,9 @@ void ASolarSystem::BeginPlay()
 
 void ASolarSystem::PlacePlanets()
 {
+	auto loc = GetActorLocation();
+	UE_LOG(LogTemp, Log, TEXT("Loc %f, %f, %f"), loc.X, loc.Y, loc.Z);
+
 	const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
 
 	FMath::RandInit(solarSystemSeed);
@@ -53,6 +55,8 @@ void ASolarSystem::PlacePlanets()
 	star = GetWorld()->SpawnActor<AStar>(universeSettings->starTemplate, location, rotator, spawnParams);
 	star->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	star->SetActorLocation(location);
+	planetSpawnAnchor->SetWorldLocation(location);
+	planetSpawner->SetWorldLocation(location);
 
 	star->Init(universeSettings->maxRadius, universeSettings->starMaterial);
 	celestialBodies.Add(star->body);
@@ -79,7 +83,6 @@ void ASolarSystem::PlacePlanets()
 		planets.Add(newPlanet);
 		newPlanet->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 
-		//Needs to be pseudo-random rather than patterned like this
 		int noiseId = i % universeSettings->planetSettings.Num();
 		FPlanetSettings newPlanetSettings = universeSettings->planetSettings[noiseId];
 
@@ -140,5 +143,26 @@ void ASolarSystem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	SimulateGravity();
+}
+
+void ASolarSystem::TeleportPlayerTo()
+{
+	auto universe = Cast<AUniverseSettings>(GetWorldSettings())->universe;
+
+	//universe->SetActorLocation(-GetActorLocation());
+	universe->SetUniversePosition(-GetActorLocation());
+}
+
+//Destroys all the objects in the system before destroying the system itself
+void ASolarSystem::DestroySystem()
+{
+	star->Destroy();
+
+	for (auto planet : planets)
+	{
+		planet->Destroy();
+	}
+
+	Destroy();
 }
 

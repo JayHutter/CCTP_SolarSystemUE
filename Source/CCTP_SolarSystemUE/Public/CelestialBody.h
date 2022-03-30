@@ -23,7 +23,10 @@ protected:
 
 	float g;
 	float massScale;
-public:	
+public:
+	void Init(float gravityConstant, float massMultiplier);
+	void Init();
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ApplyForceBetween(UCelestialBody* otherBody);

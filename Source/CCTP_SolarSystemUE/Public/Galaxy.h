@@ -38,15 +38,16 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void LoadSolarSystem(int index);
-
+	ASolarSystem* LoadSolarSystem(int index);
 	void UnloadSolarSystem();
+	void UpdateSolarSystemLocation();
+	void MoveGalaxy(FVector location);
 
 	UFUNCTION(BlueprintCallable)
 	int GetTotalSolarSystems();
 
 	UPROPERTY(EditAnywhere)
-	int galaxySize = 3000;
+	int galaxySize = 1;
 
 	UPROPERTY(EditAnywhere)
 	float galaxyRadius = 100000.f;
@@ -54,18 +55,22 @@ public:
 	UPROPERTY(EditAnywhere)
 	float minDistance = 10000.f;
 
-	float galaxyScale = 10000000.f;
+	float galaxyScale = 500000000.f;
 
 	UPROPERTY(EditAnywhere)
 	int galaxySeed;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* root;
 
 	UPROPERTY(VisibleAnywhere)
 	UCelestialBody* blackHole;
 	TArray<UCelestialBody*> bodies;
 	TArray<AStar*> stars;
 
-	int loadedSystemId = -1;
+	//int loadedSystemId = -1;
 
 	UPROPERTY(VisibleAnywhere)
 	ASolarSystem* loadedSolarSystem = nullptr;
+	UCelestialBody* loadedSystemBody = nullptr;
 };

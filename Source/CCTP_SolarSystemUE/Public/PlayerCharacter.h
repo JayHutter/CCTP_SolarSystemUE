@@ -47,6 +47,7 @@ public:
 
 	float minSpeed = 1000;
 	float maxSpeed = 999999999999.f;
+	float maxLocationMagnitude = 100000.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;

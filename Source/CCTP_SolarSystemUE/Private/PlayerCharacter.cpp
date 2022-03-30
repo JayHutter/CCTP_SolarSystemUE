@@ -63,7 +63,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}
 	FVector location = GetActorLocation();
 
-	if (location.Size() > 10000)
+	if (location.Size() > maxLocationMagnitude)
 	{
 		universe->SetCentrePoint(location);
 		SetActorLocation(FVector::ZeroVector);

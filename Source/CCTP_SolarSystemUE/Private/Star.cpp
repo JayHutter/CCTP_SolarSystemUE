@@ -20,6 +20,7 @@ AStar::AStar()
 	mesh->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	mesh->SetRelativeLocation(FVector::ZeroVector);
 	mesh->SetGenerateOverlapEvents(false);
+	mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	color = FLinearColor(0, 0, 1);
 
@@ -32,6 +33,7 @@ void AStar::Init(float radius, UMaterialInterface* material)
 	mesh->SetWorldScale3D(FVector(radius, radius, radius));
 	mesh->SetMaterial(0, material);
 	materialInstance = UMaterialInstanceDynamic::Create(mesh->GetMaterial(0), this);
+	body->Init();
 	body->SetMassOverrideInKg(GetFName(), radius * radius * radius, true);
 
 	if (UWorld* World = GetWorld())

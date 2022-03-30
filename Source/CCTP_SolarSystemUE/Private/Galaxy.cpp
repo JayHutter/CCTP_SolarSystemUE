@@ -9,17 +9,17 @@ AGalaxy::AGalaxy()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	
+	root = CreateDefaultSubobject<USceneComponent>("Scene Root");
+	RootComponent = root;
 
 	blackHole = CreateDefaultSubobject<UCelestialBody>(*FString("Black Hole"));
-	
-	RootComponent = CreateDefaultSubobject<USceneComponent>("Scene Root");
-
+	blackHole->AttachToComponent(root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	blackHole->SetRelativeLocation(FVector::ZeroVector);
-	blackHole->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 
-	galaxyScale = GetActorScale().Size();
+	//galaxyScale = GetActorScale().Size();
 
-	const float blackHoleSize = 100.f;
+	const float blackHoleSize = 100.f * galaxyScale;
 	blackHole->SetWorldScale3D(FVector(blackHoleSize, blackHoleSize, blackHoleSize));
 	FMath::RandInit(galaxySeed);
 
@@ -30,7 +30,8 @@ AGalaxy::AGalaxy()
 	
 		//float seedVal = Cast<AUniverseSettings>(GetWorldSettings())->seed * i;
 		newBody->SetWorldLocation(RandomStartPosition(), false);
-		newBody->AttachToComponent(RootComponent, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		newBody->AttachToComponent(root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		newBody->SetWorldScale3D(FVector(galaxyScale, galaxyScale, galaxyScale));
 	}
 }
 
@@ -52,12 +53,17 @@ void AGalaxy::BeginPlay()
 	//	bodies.Add(newStar->body);
 	//}
 
+	auto universe = Cast<AUniverseSettings>(GetWorldSettings())->universe;
+	//AttachToActor(universe, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
+	//AttachToComponent(universe->GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	universe->AddGalaxy(this);
 
 	//float scale = RootComponent->GetRelativeScale3D().Size();
 	//blackHole->SetMassOverrideInKg(GetFName(), scale * scale * 1000, true);
 	blackHole->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->starMaterial);
 	for (auto body : bodies)
 	{
+		body->Init(0.25f, 1);
 		body->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->starMaterial);
 	}
 
@@ -68,10 +74,10 @@ void AGalaxy::BeginPlay()
 
 FVector AGalaxy::RandomStartPosition()
 {
-	float r = galaxyRadius * FMath::Sqrt(FMath::RandRange(0.f, 1.f));
+	float r = galaxyRadius * galaxyScale * FMath::Sqrt(FMath::RandRange(0.f, 1.f));
 	float theta = FMath::RandRange(0.f, 1.f) * 2.f * PI;
 
-	r += 1000;
+	r += 1000 * galaxyScale;
 
 	float x = RootComponent->GetComponentLocation().X + r * FMath::Cos(theta);
 	float y = RootComponent->GetComponentLocation().Y + r * FMath::Sin(theta);
@@ -118,17 +124,16 @@ void AGalaxy::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	//SimulateGravity();
 	SimulateGravitySimple();
+	UpdateSolarSystemLocation();
 }
 
-void AGalaxy::LoadSolarSystem(int index)
+ASolarSystem* AGalaxy::LoadSolarSystem(int index)
 {
 	if (index > bodies.Num())
-		return;
+		return loadedSolarSystem;
 
 	if (loadedSolarSystem)
 		UnloadSolarSystem();
-
-	UE_LOG(LogTemp, Log, TEXT("Load Solar System %i"), index);
 
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -138,29 +143,57 @@ void AGalaxy::LoadSolarSystem(int index)
 	UCelestialBody* body = bodies[index];
 
 	ASolarSystem* newSystem = GetWorld()->SpawnActor<ASolarSystem>(universeSettings->solarSystemTemplate, body->GetComponentLocation(), rotator, spawnParams);
-	newSystem->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	//newSystem->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	auto loc = body->GetComponentLocation();
+	UE_LOG(LogTemp, Log, TEXT("Body %f, %f, %f"), loc.X, loc.Y, loc.Z);
 	newSystem->GenerateSolarSystem(galaxySeed + index);
 
-
 	loadedSolarSystem = newSystem;
-	loadedSystemId = index;
+	loadedSystemBody = body;
+	//loadedSystemId = index;
 
-	body->SetVisibility(false);
+	//body->SetVisibility(false);
+
+	return loadedSolarSystem;
 }
 
 void AGalaxy::UnloadSolarSystem()
 {
-	UE_LOG(LogTemp, Log, TEXT("Destroy System"));
+	//UCelestialBody* body = bodies[loadedSystemId];
+	loadedSystemBody->SetVisibility(true);
+	loadedSystemBody = nullptr;
+	//loadedSystemId = -1;
 
-	UCelestialBody* body = bodies[loadedSystemId];
-	body->SetVisibility(true);
-	loadedSystemId = -1;
-
-	bool destroy = loadedSolarSystem->Destroy();
+	loadedSolarSystem->DestroySystem();
 	loadedSolarSystem = nullptr;
+}
 
-	if (destroy)
-		UE_LOG(LogTemp, Log, TEXT("Destroying"));
+//Updates the solar system position to match the simulation location
+void AGalaxy::UpdateSolarSystemLocation()
+{
+	if (!loadedSystemBody || !loadedSolarSystem)
+		return;
+
+	loadedSolarSystem->SetActorLocation(loadedSystemBody->GetComponentLocation());
+}
+
+/* Teleports the entire galaxy to a new location
+ * Each component must be manually updated due to physics enabled
+ */
+void AGalaxy::MoveGalaxy(FVector location)
+{
+	const FVector galaxyLoc = GetActorLocation();
+
+	FVector bHoleRelLoc = blackHole->GetComponentLocation() - galaxyLoc;
+	blackHole->SetWorldLocation(location + bHoleRelLoc);
+
+	for (auto body : bodies)
+	{
+		FVector relLoc = body->GetComponentLocation() - galaxyLoc;
+		body->SetWorldLocation(location + relLoc);
+	}
+	
+	SetActorLocation(location);
 }
 
 int AGalaxy::GetTotalSolarSystems()

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "CelestialBody.h"
+//#include "PlayerCharacter.h"
 #include "SolarSystem.h"
 #include "Galaxy.generated.h"
 
@@ -41,6 +42,9 @@ public:
 	void UpdateSolarSystemLocation();
 	void MoveGalaxy(FVector location);
 
+	//UFUNCTION(BlueprintCallable)
+	//void AddPlayer(APlayerCharacter* playerPtr);
+
 	UFUNCTION(BlueprintCallable)
 	int GetTotalSolarSystems();
 
@@ -65,6 +69,7 @@ public:
 	UCelestialBody* blackHole;
 	TArray<UCelestialBody*> bodies;
 	TArray<AStar*> stars;
+	//APlayerCharacter* player;
 
 	//int loadedSystemId = -1;
 

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CelestialBody.h"
 #include "GameFramework/Actor.h"
 #include "Satellite.generated.h"
 
@@ -22,5 +23,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	void MoveWithParent(FVector currentLocation);
 
+	UPROPERTY(EditAnywhere)
+	UCelestialBody* body;
+	FVector prevLocation;
 };

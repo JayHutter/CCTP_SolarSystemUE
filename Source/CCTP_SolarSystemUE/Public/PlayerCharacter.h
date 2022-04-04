@@ -82,6 +82,13 @@ public:
 
 	void TeleportToObject();
 	void IsLookingAtObject();
+	void UpdateRelativeLocation();
+
+	UFUNCTION(BlueprintCallable)
+	void AttachToSystemBody(UCelestialBody* body);
+
+	UPROPERTY(VisibleAnywhere)
+	UCelestialBody* attachedSystem;
 
 	FVector MoveDirection;
 

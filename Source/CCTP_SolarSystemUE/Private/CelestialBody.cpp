@@ -43,6 +43,7 @@ void UCelestialBody::Init(float gravityConstant, float massMultiplier)
 {
 	this->g = gravityConstant;
 	this->massScale = massMultiplier;
+	SetSimulatePhysics(true);
 }
 
 void UCelestialBody::Init()
@@ -56,6 +57,8 @@ void UCelestialBody::Init()
 void UCelestialBody::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	FVector vel = GetPhysicsLinearVelocity();
+	//UE_LOG(LogTemp, Log, TEXT("O: %s, F: %f, %f, %f"), *GetOwner()->GetName(), vel.X, vel.Y, vel.Z);
 }
 
 void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody)
@@ -72,7 +75,7 @@ void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody)
 	float magnitude = massA * massB / rSquared;;
 
 	FVector forceA = (posB - posA).GetSafeNormal() * magnitude * g;
-
+	//UE_LOG(LogTemp, Log, TEXT("O: %s, F: %f, %f, %f"), *GetOwner()->GetName(), forceA.X, forceA.Y, forceA.Z);
 	AddForce(forceA * scale, GetFName(), false);
 }
 
@@ -91,8 +94,10 @@ void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody)
 		return;
 
 	FVector v = GetRightVector() * FMath::Sqrt((g * otherMass) / r);
+	
 	SetAllPhysicsLinearVelocity(v * scale, true);
 }
+
 
 FVector UCelestialBody::TeleportTo(FVector startPos)
 {

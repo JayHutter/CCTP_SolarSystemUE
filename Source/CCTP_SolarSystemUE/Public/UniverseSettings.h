@@ -68,5 +68,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ASolarSystem> solarSystemTemplate;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UObject> satelliteTemplate;
+
 	AUniverse* universe;
+
+	static FVector GetRandomLocationInCircle(float radius, float minimumDistance = 0.f);
+	static FVector GetRandomLocationOnCircle(float radius);
+
+	static FVector GetRandomLocationOnSphere(float radius);
 };

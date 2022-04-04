@@ -67,4 +67,3 @@ void AUniverse::MoveAllGalaxies(FVector newUniLoc)
 		galaxy->MoveGalaxy(newUniLoc + relLoc);
 	}
 }
-

@@ -44,8 +44,10 @@ public:
 	FVector vel;
 	UPROPERTY(VisibleAnywhere)
 	float speed;
+	FVector GetPointOnSurface();
 
 	void Init(FPlanetSettings settings, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
+	void DestroyPlanet();
 
 protected:
 	// Called when the game starts or when spawned
@@ -53,10 +55,24 @@ protected:
 	void SetupGravity();
 	void GenerateTerrain();
 	void GenerateColours();
+	void GenerateSatellites();
+	void GenerateRing();
+	void SimulateSateliteOrbits();
+	void SetSateliteInitialVelocites();
 
 	bool active = false;
 	int currentRes = 16;
 	APlayerCameraManager* playerCamera;
 	float timer = 0;
 	UMaterialInterface* planetMaterial;
+
+	UPROPERTY(EditAnywhere)
+	TArray<UCelestialBody*> satellites;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* satelliteRoot;
+
+	UPROPERTY(EditAnywhere)
+	TArray<ASatellite*> satelliteActors;
+	TArray<UCelestialBody*> satelliteBodies;
 };

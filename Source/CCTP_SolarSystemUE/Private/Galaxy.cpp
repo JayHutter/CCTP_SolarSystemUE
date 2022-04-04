@@ -3,6 +3,7 @@
 
 #include "Galaxy.h"
 #include "UniverseSettings.h"
+#include "GameFramework/PawnMovementComponent.h"
 
 // Sets default values
 AGalaxy::AGalaxy()
@@ -109,11 +110,10 @@ ASolarSystem* AGalaxy::LoadSolarSystem(int index)
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	const FRotator rotator;
-	const AUniverseSettings* universeSettings = Cast<AUniverseSettings>(GetWorldSettings());
 
 	UCelestialBody* body = bodies[index];
-
-	ASolarSystem* newSystem = GetWorld()->SpawnActor<ASolarSystem>(universeSettings->solarSystemTemplate, body->GetComponentLocation(), rotator, spawnParams);
+	auto settings = Cast<AUniverseSettings>(GetWorldSettings());
+	ASolarSystem* newSystem = GetWorld()->SpawnActor<ASolarSystem>(settings->solarSystemTemplate, body->GetComponentLocation(), rotator, spawnParams);
 	//newSystem->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	auto loc = body->GetComponentLocation();
 	UE_LOG(LogTemp, Log, TEXT("Body %f, %f, %f"), loc.X, loc.Y, loc.Z);
@@ -123,6 +123,10 @@ ASolarSystem* AGalaxy::LoadSolarSystem(int index)
 	loadedSystemBody = body;
 	
 	body->SetVisibility(false);
+
+	//newSystem->TeleportPlayerTo();
+	auto universe = Cast<AUniverseSettings>(GetWorldSettings())->universe;
+	universe->SetUniversePosition(GetActorLocation() -newSystem->GetActorLocation());
 
 	return loadedSolarSystem;
 }
@@ -144,7 +148,14 @@ void AGalaxy::UpdateSolarSystemLocation()
 	if (!loadedSystemBody || !loadedSolarSystem)
 		return;
 
-	loadedSolarSystem->SetActorLocation(loadedSystemBody->GetComponentLocation());
+	FVector loc = loadedSystemBody->GetComponentLocation();
+
+	loadedSolarSystem->SetActorLocation(loc);
+	//Cast<AUniverseSettings>(GetWorldSettings())->universe->SetUniversePosition(-loc);
+	//if (playerPawn)
+	//{
+	//	playerPawn->GetMovementComponent()->Velocity = loadedSolarSystem->GetVelocity();
+	//}
 }
 
 /* Teleports the entire galaxy to a new location
@@ -165,6 +176,11 @@ void AGalaxy::MoveGalaxy(FVector location)
 	
 	SetActorLocation(location);
 }
+
+//void AGalaxy::AddPlayer(APlayerCharacter* playerPtr)
+//{
+//	player = playerPtr;
+//}
 
 int AGalaxy::GetTotalSolarSystems()
 {

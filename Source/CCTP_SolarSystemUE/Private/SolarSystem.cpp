@@ -34,8 +34,8 @@ void ASolarSystem::GenerateSolarSystem(int seed)
 void ASolarSystem::BeginPlay()
 {
 	Super::BeginPlay();
-	//if (generateAtStart)
-	//	GenerateSolarSystem();
+	if (generateAtStart)
+		GenerateSolarSystem();
 }
 
 void ASolarSystem::PlacePlanets()
@@ -145,6 +145,11 @@ void ASolarSystem::Tick(float DeltaTime)
 	SimulateGravity();
 }
 
+FVector ASolarSystem::GetTeleportPoint()
+{
+	return planets[0]->GetPointOnSurface();
+}
+
 void ASolarSystem::TeleportPlayerTo()
 {
 	auto universe = Cast<AUniverseSettings>(GetWorldSettings())->universe;
@@ -160,7 +165,7 @@ void ASolarSystem::DestroySystem()
 
 	for (auto planet : planets)
 	{
-		planet->Destroy();
+		planet->DestroyPlanet();
 	}
 
 	Destroy();

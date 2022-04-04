@@ -62,14 +62,29 @@ void APlayerCharacter::Tick(float DeltaTime)
 		//AttachToActor(universe, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 	}
 	FVector location = GetActorLocation();
-
+	//UpdateRelativeLocation();
 	if (location.Size() > maxLocationMagnitude)
 	{
-		universe->SetCentrePoint(location);
-		SetActorLocation(FVector::ZeroVector);
+		//universe->SetCentrePoint(location);
+		//SetActorLocation(FVector::ZeroVector);
 	}
 	else
 	{
+		if (attachedSystem)
+		{
+			FVector vel = attachedSystem->GetPhysicsLinearVelocity();
+			UE_LOG(LogTemp, Log, TEXT("System Vel %f, %f, %f"), vel.X, vel.Y, vel.Z);
+			SetActorLocation(attachedSystem->GetComponentLocation());
+		}
+
+		auto parent = GetParentComponent();
+		if (parent)
+		{
+			FVector loc = parent->GetComponentLocation();
+			UE_LOG(LogTemp, Log, TEXT("Pos %f, %f, %f"), loc.X, loc.Y, loc.Z);
+			Collider->SetWorldLocationAndRotationNoPhysics(loc, FRotator::ZeroRotator);
+		}
+
 		Collider->AddForce(MoveDirection * moveSpeed, GetFName(), true);
 		FVector vel = Collider->GetPhysicsLinearVelocity();
 
@@ -84,10 +99,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 			MeshRoot->SetWorldRotation(Rotator);
 		}
 	}
-	//universe->UpdatePostion(GetActorLocation());
 
-
-	//IsLookingAtObject();
+	
 }
 
 // Called to bind functionality to input
@@ -151,6 +164,24 @@ void APlayerCharacter::IsLookingAtObject()
 			UE_LOG(LogTemp, Log, TEXT("Hit Celestial Body"));
 		}
 	}
+}
+
+//If the player is parented, update the relative location so that it moves with it
+void APlayerCharacter::UpdateRelativeLocation()
+{
+	auto parentActor = GetParentActor();
+	if (parentActor)
+	{
+		FVector parentLoc = parentActor->GetActorLocation();
+		FVector relLoc = GetActorLocation() - parentLoc;
+
+		SetActorLocation(parentLoc + relLoc);
+	}
+}
+
+void APlayerCharacter::AttachToSystemBody(UCelestialBody* body)
+{
+	attachedSystem = body;
 }
 
 void APlayerCharacter::MoveForward(float Value)

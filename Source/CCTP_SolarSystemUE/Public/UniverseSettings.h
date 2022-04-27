@@ -45,6 +45,12 @@ public:
 	TArray<FPlanetSettings> planetSettings;
 
 	UPROPERTY(EditAnywhere)
+	FPlanetSettings satelliteSettings;
+
+	UPROPERTY(EditAnywhere)
+	TArray<UTexture*> terrainGradients;
+
+	UPROPERTY(EditAnywhere)
 	UMaterialInterface* planetMaterial;
 
 	UPROPERTY(EditAnywhere)
@@ -52,6 +58,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* starMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* blackHoleMaterial;
 
 	UPROPERTY(EditAnywhere)
 	float massScale = 1;

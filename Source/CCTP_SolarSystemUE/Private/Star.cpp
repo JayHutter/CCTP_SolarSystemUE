@@ -8,24 +8,25 @@
 // Sets default values
 AStar::AStar()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	body = CreateDefaultSubobject<UCelestialBody>(TEXT("Body"));
 	RootComponent = body;
 
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surface"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	mesh->SetStaticMesh(SphereMeshAsset.Object);
-	mesh->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	//mesh->AttachToComponent(body, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	mesh->SetupAttachment(body);
 	mesh->SetRelativeLocation(FVector::ZeroVector);
 	mesh->SetGenerateOverlapEvents(false);
 	mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	color = FLinearColor(0, 0, 1);
 
-	//lightSource = CreateDefaultSubobject<UDirectionalLightComponent>("Light Source");
+	lightSource = CreateDefaultSubobject<UDirectionalLightComponent>("Light Source");
 	//lightSource->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	lightSource->SetupAttachment(mesh);
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void AStar::Init(float radius, UMaterialInterface* material)
@@ -52,13 +53,16 @@ void AStar::Tick(float DeltaTime)
 	//float newmass = body->CalculateMass(GetFName()) + GetWorld()->DeltaTimeSeconds * 1000000;
 	//body->SetMassOverrideInKg(GetFName(), newmass, true);
 
-	if (materialInstance)
-	{
-		materialInstance->SetVectorParameterValue(FName(TEXT("Color")), color);
-		mesh->SetMaterial(0, materialInstance);
-	}
+	//if (materialInstance)
+	//{
+	//	materialInstance->SetVectorParameterValue(FName(TEXT("Color")), color);
+	//	mesh->SetMaterial(0, materialInstance);
+	//}
 
-	//FRotator aim = (playerCamera->GetCameraLocation() - GetActorLocation()).Rotation();
-	//lightSource->SetWorldRotation(aim);
-	//lightSource->SetLightColor(color);
+	if (lightSource)
+	{
+		FRotator aim = (playerCamera->GetCameraLocation() - GetActorLocation()).Rotation();
+		lightSource->SetWorldRotation(aim);
+		//lightSource->SetLightColor(color);
+	}
 }

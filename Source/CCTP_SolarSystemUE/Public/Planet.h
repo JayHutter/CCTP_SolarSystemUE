@@ -49,6 +49,8 @@ public:
 	void Init(FPlanetSettings settings, UMaterialInterface* terrainMaterial = nullptr, UMaterialInterface* waterMaterial = nullptr);
 	void DestroyPlanet();
 
+	float rotationSpeed = 1;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -59,6 +61,7 @@ protected:
 	void GenerateRing();
 	void SimulateSateliteOrbits();
 	void SetSateliteInitialVelocites();
+	void SpinPlanet();
 
 	bool active = false;
 	int currentRes = 16;

@@ -9,16 +9,18 @@
 // Sets default values
 ASolarSystem::ASolarSystem()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 	root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	solarBody = CreateDefaultSubobject<UCelestialBody>(TEXT("Solar System BodY"));
 	solarBody->SetVisibility(false);
 	RootComponent = root;
 	planetSpawnAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Root"));
-	planetSpawnAnchor->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+	//planetSpawnAnchor->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true));
+	planetSpawnAnchor->SetupAttachment(root);
 	planetSpawner = CreateDefaultSubobject<USceneComponent>(TEXT("Planet Spawn Point"));
-	planetSpawner->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	//planetSpawner->AttachToComponent(planetSpawnAnchor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	planetSpawner->SetupAttachment(planetSpawnAnchor);
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void ASolarSystem::GenerateSolarSystem(int seed)
@@ -91,6 +93,9 @@ void ASolarSystem::PlacePlanets()
 		newPlanetSettings.chunkResolution = FMath::Pow(2, universeSettings->planetChunkResolution);
 		newPlanetSettings.seed = FVector(planetSeed, planetSeed, planetSeed);
 		newPlanetSettings.noiseScale = newPlanetSettings.radius / universeSettings->miniumRadius;
+		newPlanetSettings.surfaceMaterial = universeSettings->planetMaterial;
+		const int gradId = FMath::RandRange(0, universeSettings->terrainGradients.Num()-1);
+		newPlanetSettings.terrainGradient = universeSettings->terrainGradients[gradId];
 
 		newPlanet->Init(newPlanetSettings, newPlanetSettings.surfaceMaterial, universeSettings->waterMaterial);
 		celestialBodies.Add(newPlanet->body);
@@ -147,7 +152,7 @@ void ASolarSystem::Tick(float DeltaTime)
 
 FVector ASolarSystem::GetTeleportPoint()
 {
-	return planets[0]->GetPointOnSurface();
+	return planets[planets.Num()-1]->GetPointOnSurface();
 }
 
 void ASolarSystem::TeleportPlayerTo()

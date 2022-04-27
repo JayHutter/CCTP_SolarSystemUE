@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CelestialBody.h"
+#include "Terrain.h"
 #include "GameFramework/Actor.h"
 #include "Satellite.generated.h"
 
@@ -28,4 +29,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	UCelestialBody* body;
 	FVector prevLocation;
+
+	UPROPERTY(VisibleAnywhere, Instanced)
+	TArray<UTerrain*> terrain;
+
+	void GenerateTerrain();
+	float timer = 0;
 };

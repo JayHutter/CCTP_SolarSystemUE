@@ -8,19 +8,17 @@
 // Sets default values
 AGalaxy::AGalaxy()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	
 	root = CreateDefaultSubobject<USceneComponent>("Scene Root");
 	RootComponent = root;
 
 	blackHole = CreateDefaultSubobject<UCelestialBody>(*FString("Black Hole"));
-	blackHole->AttachToComponent(root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	//blackHole->AttachToComponent(root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	blackHole->SetupAttachment(root);
 	blackHole->SetRelativeLocation(FVector::ZeroVector);
 
 	//galaxyScale = GetActorScale().Size();
 
-	const float blackHoleSize = 100.f * galaxyScale;
+	const float blackHoleSize = 100.f * starScale;
 	blackHole->SetWorldScale3D(FVector(blackHoleSize, blackHoleSize, blackHoleSize));
 	FMath::RandInit(galaxySeed);
 
@@ -31,9 +29,11 @@ AGalaxy::AGalaxy()
 	
 		//float seedVal = Cast<AUniverseSettings>(GetWorldSettings())->seed * i;
 		newBody->SetWorldLocation(RandomStartPosition(), false);
-		newBody->AttachToComponent(root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
-		newBody->SetWorldScale3D(FVector(galaxyScale, galaxyScale, galaxyScale));
+		newBody->SetupAttachment(root);
+		//newBody->AttachToComponent(root, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+		newBody->SetWorldScale3D(FVector(starScale, starScale, starScale));
 	}
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
@@ -59,14 +59,14 @@ void AGalaxy::BeginPlay()
 	auto universe = Cast<AUniverseSettings>(GetWorldSettings())->universe;
 	//AttachToActor(universe, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, false));
 	//AttachToComponent(universe->GetRootComponent(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
-	universe->AddGalaxy(this);
+	//universe->AddGalaxy(this);
 
 	//float scale = RootComponent->GetRelativeScale3D().Size();
 	//blackHole->SetMassOverrideInKg(GetFName(), scale * scale * 1000, true);
-	blackHole->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->starMaterial);
+	blackHole->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->blackHoleMaterial);
 	for (auto body : bodies)
 	{
-		body->Init(0.01f, 1);
+		body->Init(1.f, 1); //0.01f
 		body->SetMaterial(0, Cast<AUniverseSettings>(GetWorldSettings())->starMaterial);
 	}
 
@@ -94,7 +94,8 @@ void AGalaxy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	//SimulateGravity();
-	SimulateGravitySimple();
+	if (simulating)
+		SimulateGravitySimple();
 	UpdateSolarSystemLocation();
 }
 
@@ -126,13 +127,19 @@ ASolarSystem* AGalaxy::LoadSolarSystem(int index)
 
 	//newSystem->TeleportPlayerTo();
 	auto universe = Cast<AUniverseSettings>(GetWorldSettings())->universe;
-	universe->SetUniversePosition(GetActorLocation() -newSystem->GetActorLocation());
+	universe->SetUniversePosition(GetActorLocation() -newSystem->GetTeleportPoint());
+
+	if (pauseOnSystemLoad)
+		PauseSimulation();
 
 	return loadedSolarSystem;
 }
 
 void AGalaxy::UnloadSolarSystem()
 {
+	if (!loadedSolarSystem || !loadedSystemBody)
+		return;
+
 	//UCelestialBody* body = bodies[loadedSystemId];
 	loadedSystemBody->SetVisibility(true);
 	loadedSystemBody = nullptr;
@@ -140,6 +147,9 @@ void AGalaxy::UnloadSolarSystem()
 
 	loadedSolarSystem->DestroySystem();
 	loadedSolarSystem = nullptr;
+
+	if (pauseOnSystemLoad)
+		ResumeSimulation();
 }
 
 //Updates the solar system position to match the simulation location
@@ -216,5 +226,25 @@ void AGalaxy::SetInitialVelocitiesSimple()
 		bodies[i]->SetInitialVelocity(blackHole);
 		//systems[i]->solarBody->SetInitialVelocity(blackHole);
 	}
+}
+
+void AGalaxy::PauseSimulation()
+{
+	for (auto body : bodies)
+	{
+		body->PauseMotion();
+	}
+
+	simulating = false;
+}
+
+void AGalaxy::ResumeSimulation()
+{
+	for (auto body : bodies)
+	{
+		body->ResumeMotion();
+	}
+
+	simulating = true;
 }
 

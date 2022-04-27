@@ -12,8 +12,6 @@
 // Sets default values
 APlanet::APlanet()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 	//gravityField = CreateDefaultSubobject<UGravitationalField>(TEXT("Gravitational Field"));
 	body = CreateDefaultSubobject<UCelestialBody>(TEXT("Body"));
 
@@ -26,6 +24,8 @@ APlanet::APlanet()
 		UTerrain* newTerrain = CreateDefaultSubobject<UTerrain>(*FString("Terrain" + FString::FromInt(i)));
 		terrain.Add(newTerrain);
 	}
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void APlanet::ManageLOD()
@@ -42,8 +42,9 @@ void APlanet::BeginPlay()
 
 FVector APlanet::GetPointOnSurface()
 {
+	//FVector location = RootComponent->GetRelativeLocation();
 	FVector location = GetActorLocation();
-	location += GetActorUpVector() * planetSettings.radius * 1.5f;
+	location += GetActorUpVector() * planetSettings.radius * 1.2f;
 	return location;
 }
 
@@ -104,6 +105,7 @@ void APlanet::Tick(float DeltaTime)
 	speed = vel.Size();
 	satelliteRoot->SetWorldLocation(GetActorLocation());
 	SimulateSateliteOrbits();
+	SpinPlanet();
 }
 
 void APlanet::SetupGravity()
@@ -144,7 +146,7 @@ void APlanet::GenerateSatellites()
 		//newSatellite->SetMassOverrideInKg(newSatellite->GetFName(), 100000, true);
 		//satellites.Add(newSatellite);
 
-		ASatellite* newSatellite = GetWorld()->SpawnActor<ASatellite>(satelliteClass, GetActorLocation() + AUniverseSettings::GetRandomLocationOnSphere(planetSettings.radius * 5), rotator , spawnParams);
+		ASatellite* newSatellite = GetWorld()->SpawnActor<ASatellite>(satelliteClass, GetActorLocation() + AUniverseSettings::GetRandomLocationOnSphere(planetSettings.radius * 3), rotator , spawnParams);
 		newSatellite->AttachToComponent(satelliteRoot, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 		satelliteActors.Add(newSatellite);
 		satelliteBodies.Add(newSatellite->body);
@@ -188,4 +190,11 @@ void APlanet::SetSateliteInitialVelocites()
 		//satellite->body->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
 		satellite->SetInitialVelocity(body);
 	}
+}
+
+void APlanet::SpinPlanet()
+{
+	float delta = GetWorld()->GetDeltaSeconds();
+	FQuat rotation = FQuat(FRotator(0.f, delta * rotationSpeed, 0.f));
+	AddActorLocalRotation(rotation);
 }

@@ -38,9 +38,14 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	ASolarSystem* LoadSolarSystem(int index);
+
+	UFUNCTION(BlueprintCallable)
 	void UnloadSolarSystem();
 	void UpdateSolarSystemLocation();
 	void MoveGalaxy(FVector location);
+
+	void PauseSimulation();
+	void ResumeSimulation();
 
 	//UFUNCTION(BlueprintCallable)
 	//void AddPlayer(APlayerCharacter* playerPtr);
@@ -58,6 +63,7 @@ public:
 	float minDistance = 10000.f;
 
 	float galaxyScale = 500000000.f;
+	float starScale = 100000000.f;
 
 	UPROPERTY(EditAnywhere)
 	int galaxySeed;
@@ -76,4 +82,10 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	ASolarSystem* loadedSolarSystem = nullptr;
 	UCelestialBody* loadedSystemBody = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	bool pauseOnSystemLoad = false;
+
+	UPROPERTY(VisibleAnywhere);
+	bool simulating = true;
 };

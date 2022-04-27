@@ -3,15 +3,15 @@
 
 #include "Universe.h"
 #include "UniverseSettings.h"
+#include "EngineUtils.h"
 
 // Sets default values
 AUniverse::AUniverse()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	sceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = sceneComponent;
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +24,8 @@ void AUniverse::BeginPlay()
 		settings->universe = this;
 	else
 		Destroy();
+
+	FindAllGalaxies(GetWorld(), galaxies);
 }
 
 // Called every frame
@@ -65,5 +67,14 @@ void AUniverse::MoveAllGalaxies(FVector newUniLoc)
 	{
 		FVector relLoc = galaxy->GetActorLocation() - universeLoc;
 		galaxy->MoveGalaxy(newUniLoc + relLoc);
+	}
+}
+
+template <typename T>
+void AUniverse::FindAllGalaxies(UWorld* world, TArray<T*>& Out)
+{
+	for (TActorIterator<T> i(world); i; ++i)
+	{
+		Out.Add(*i);
 	}
 }

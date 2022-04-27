@@ -36,4 +36,8 @@ public:
 	FVector TeleportTo(FVector startPos);
 
 	float offsetDistance = 1000;
+	FVector lastVelocity;
+
+	void PauseMotion();
+	void ResumeMotion();
 };

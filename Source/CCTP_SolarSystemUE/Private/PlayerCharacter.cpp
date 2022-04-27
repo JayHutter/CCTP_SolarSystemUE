@@ -11,9 +11,6 @@
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
@@ -43,6 +40,8 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 // Called when the game starts or when spawned
@@ -132,6 +131,8 @@ void APlayerCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+//Was going to find the system the player was looking at and teleport them to it (like jumping to hyperspace)
+//Too costly and inaccurate to use for travel between planets
 void APlayerCharacter::IsLookingAtObject()
 {
 	const FRotator Rotation = Controller->GetControlRotation();
@@ -207,14 +208,14 @@ void APlayerCharacter::MoveRight(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
-		//if (moveSpeed <= 1)
-		//	moveSpeed = 1;
-		//
-		//moveSpeed += Value * speedIncrement;
+		if (moveSpeed <= 1)
+			moveSpeed = 1;
+		
+		moveSpeed += Value * speedIncrement;
 
-		if (Value > 0)
-			moveSpeed = maxSpeed;
-		else
-			moveSpeed = minSpeed;
+		//if (Value > 0)
+		//	moveSpeed = maxSpeed;
+		//else
+		//	moveSpeed = minSpeed;
 	}
 }

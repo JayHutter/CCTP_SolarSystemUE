@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Terrain.h"
 
 // Sets default values for this component's properties
@@ -124,10 +123,18 @@ void UTerrain::ConstructQuadTree()
 		mesh->ClearAllMeshSections();
 		water->ClearAllMeshSections();
 
+		int highestLevel = 0;
 		for (auto&child : rootChunk->GetVisibleChildren())
 		{
+			if (child->detailLevel > highestLevel)
+				highestLevel = child->detailLevel;
 			child->CalculateTerrainAndWaterTris(terrainData, waterData);
 		}
+
+		detailLevel = highestLevel;
+
+		float dist = FVector::Distance(GetOwner()->GetActorLocation(), camLocation) - planetSettings->radius;
+		reflectiveness = dist > reflectDistance ? 1 : 0;
 
 		mesh->CreateMeshSection(0, terrainData.vertices, terrainData.triangles, terrainData.normals, terrainData.uvs, terrainData.vertexColors, terrainData.tangents, true);
 		water->CreateMeshSection(0, waterData.vertices, waterData.triangles, waterData.normals, waterData.uvs, waterData.vertexColors, waterData.tangents, false);
@@ -228,6 +235,10 @@ FVector UTerrain::CalculateNormal(FVector vertexPos)
 
 void UTerrain::SetColors()
 {
+	if (!dynamicTerrainMat)
+		return;
+
+	//dynamicTerrainMat->SetScalarParameterValue("Emissiveness", reflectiveness);
 	dynamicTerrainMat->SetVectorParameterValue("Terrain Data", FLinearColor(planetSettings->minHeight, planetSettings->maxHeight, planetSettings->radius, 0));
 	dynamicTerrainMat->SetTextureParameterValue("Biome Sample", planetSettings->terrainGradient);
 	mesh->SetMaterial(0, dynamicTerrainMat);
@@ -267,12 +278,13 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 	{
 		//UE_LOG(LogTemp, Log, TEXT("ID: %s"), *id);
 		//UE_LOG(LogTemp, Log, TEXT("LOD: %i"), detailLevel);
-		FVector surfaceLocation = (location);
-		FRotator rotation = parentPlanet->GetActorRotation();
+		FVector surfaceLocation = location;
+		const FRotator rotation = parentPlanet->GetActorRotation();
 		surfaceLocation = rotation.RotateVector(surfaceLocation);
 		surfaceLocation = surfaceLocation * planetSettings->radius + parentPlanet->GetActorLocation();
+		const float distance = FVector::Distance(surfaceLocation, cameraLocation);
+
 		//UE_LOG(LogTemp, Log, TEXT("Location: %f,%f,%f"), surfaceLocation.X, surfaceLocation.Y, surfaceLocation.Z);
-		float distance = FVector::Distance(surfaceLocation, cameraLocation);
 		//UE_LOG(LogTemp, Log, TEXT("Distance: %f\n"), distance);
 		if (distance <= detailDistances[detailLevel] * planetSettings->radius)
 		{

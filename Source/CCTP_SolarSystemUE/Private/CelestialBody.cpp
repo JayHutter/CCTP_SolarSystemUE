@@ -7,14 +7,14 @@
 // Sets default values for this component's properties
 UCelestialBody::UCelestialBody()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	
 
 	// ...mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Surface"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh>SphereMeshAsset(TEXT("StaticMesh'/Engine/BasicShapes/Sphere.Sphere'"));
 	SetStaticMesh(SphereMeshAsset.Object);
 	SetupCollisions();
+
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 
@@ -105,4 +105,15 @@ FVector UCelestialBody::TeleportTo(FVector startPos)
 	direction.Normalize();
 
 	return GetComponentLocation() + direction * offsetDistance;
+}
+
+void UCelestialBody::PauseMotion()
+{
+	lastVelocity = GetPhysicsLinearVelocity();
+	SetAllPhysicsLinearVelocity(FVector::ZeroVector);
+}
+
+void UCelestialBody::ResumeMotion()
+{
+	SetAllPhysicsLinearVelocity(lastVelocity);
 }

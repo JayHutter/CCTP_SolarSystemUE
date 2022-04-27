@@ -34,4 +34,7 @@ public:
 
 	void AddGalaxy(AGalaxy* galaxy);
 	void MoveAllGalaxies(FVector newUniLoc);
+
+	template<typename  T>
+	void FindAllGalaxies(UWorld* world, TArray<T*>& Out);
 };

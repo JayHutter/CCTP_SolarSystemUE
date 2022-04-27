@@ -119,6 +119,9 @@ private:
 	FTriangleData terrainData;
 	FTriangleData waterData;
 	UMaterialInstanceDynamic* dynamicTerrainMat;
+
+	const float reflectDistance = 500000000;
+	float reflectiveness = 0;
 };
 
 

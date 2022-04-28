@@ -121,6 +121,9 @@ void APlanet::GenerateTerrain()
 	}
 }
 
+/*
+ * Spawns the satellites around the planet
+ */
 void APlanet::GenerateSatellites()
 {
 	auto satelliteClass = Cast<AUniverseSettings>(GetWorldSettings())->satelliteTemplate;
@@ -153,6 +156,10 @@ void APlanet::GenerateSatellites()
 	}
 }
 
+/*
+ * Attempt at create a celstial ring
+ * Did not perform as well as expected
+ */
 void APlanet::GenerateRing()
 {
 	auto satelliteClass = Cast<AUniverseSettings>(GetWorldSettings())->satelliteTemplate;

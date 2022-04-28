@@ -28,6 +28,9 @@ void UCelestialBody::BeginPlay()
 	//massScale = settings->massScale;
 }
 
+/*
+ * Set the physics settings to allow for physics while also disabling collisions
+ */
 void UCelestialBody::SetupCollisions()
 {
 	SetSimulatePhysics(true);
@@ -61,6 +64,10 @@ void UCelestialBody::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	//UE_LOG(LogTemp, Log, TEXT("O: %s, F: %f, %f, %f"), *GetOwner()->GetName(), vel.X, vel.Y, vel.Z);
 }
 
+/*
+ * Newton's law of universal gravitation
+ * Applies a force between two celestial bodies
+ */
 void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody)
 {
 	FVector posA = GetComponentLocation();
@@ -79,6 +86,9 @@ void UCelestialBody::ApplyForceBetween(UCelestialBody* otherBody)
 	AddForce(forceA * scale, GetFName(), false);
 }
 
+/*
+ * Uses the centripetal force to determine the starting velocity of the body
+ */
 void UCelestialBody::SetInitialVelocity(UCelestialBody* otherBody)
 {
 	float otherMass = otherBody->CalculateMass(otherBody->GetFName()) / massScale;

@@ -263,6 +263,10 @@ Chunk::Chunk(Chunk* parent, FVector location, float scale, int detailLevel, FVec
 	this->parentPlanet = parentPlanet;
 }
 
+/*
+ * Recursive function that creates all the highest level children
+ * Returns true if any changes are made to the tree
+ */
 bool Chunk::GenerateChildren(FVector cameraLocation)
 {
 	if (detailLevel < 0)
@@ -330,6 +334,9 @@ bool Chunk::GenerateChildren(FVector cameraLocation)
 	return modified;
 }
 
+/*
+ * Gets all the highest level children to generate the terrain with
+ */
 TArray<Chunk*> Chunk::GetVisibleChildren()
 {
 	TArray<Chunk*> chunksToRender;

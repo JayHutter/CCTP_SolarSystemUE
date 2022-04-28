@@ -24,6 +24,9 @@ protected:
 
 	float g;
 	float massScale;
+
+	float offsetDistance = 1000;
+	FVector lastVelocity;
 public:
 	void Init(float gravityConstant, float massMultiplier);
 	void Init();
@@ -34,10 +37,6 @@ public:
 	void SetInitialVelocity(UCelestialBody* otherBody);
 
 	FVector TeleportTo(FVector startPos);
-
-	float offsetDistance = 1000;
-	FVector lastVelocity;
-
 	void PauseMotion();
 	void ResumeMotion();
 };

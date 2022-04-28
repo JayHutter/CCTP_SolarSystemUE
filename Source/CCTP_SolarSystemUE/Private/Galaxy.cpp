@@ -75,6 +75,9 @@ void AGalaxy::BeginPlay()
 	SetInitialVelocitiesSimple();
 }
 
+/*
+ * Places solar systems randomly within a circle around the black hole
+ */
 FVector AGalaxy::RandomStartPosition()
 {
 	float r = galaxyRadius * galaxyScale * FMath::Sqrt(FMath::RandRange(0.f, 1.f));
@@ -99,7 +102,9 @@ void AGalaxy::Tick(float DeltaTime)
 	UpdateSolarSystemLocation();
 }
 
-//Loads selected system and hides the celestial body 
+/*
+ * Loads selected system and hides the celestial body 
+ */
 ASolarSystem* AGalaxy::LoadSolarSystem(int index)
 {
 	if (index > bodies.Num())
@@ -152,7 +157,9 @@ void AGalaxy::UnloadSolarSystem()
 		ResumeSimulation();
 }
 
-//Updates the solar system position to match the simulation location
+/*
+ * Updates the solar system position to match the simulation location
+ */
 void AGalaxy::UpdateSolarSystemLocation()
 {
 	if (!loadedSystemBody || !loadedSolarSystem)
@@ -197,6 +204,9 @@ int AGalaxy::GetTotalSolarSystems()
 	return bodies.Num();
 }
 
+/*
+ * Sets the scale of the physics simulation so that the values are much smaller, but give the same result
+ */
 void AGalaxy::SetSystemScale()
 {
 	blackHole->scale = galaxyScale;
@@ -208,7 +218,9 @@ void AGalaxy::SetSystemScale()
 	}
 }
 
-//Only simulate the solar systems against the black hole to save on computation
+/*
+ * Only simulate the solar systems against the black hole to save on computation
+ */
 void AGalaxy::SimulateGravitySimple()
 {
 	for (int i = 0; i < galaxySize; i++)
@@ -218,7 +230,9 @@ void AGalaxy::SimulateGravitySimple()
 	}
 }
 
-//Only determines the cetripetal force against the black hole
+/*
+ * Only determines the cetripetal force against the black hole
+ */
 void AGalaxy::SetInitialVelocitiesSimple()
 {
 	for (int i=0; i< galaxySize; i++)
